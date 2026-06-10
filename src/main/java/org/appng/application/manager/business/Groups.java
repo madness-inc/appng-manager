@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2017 the original author or authors.
+ * Copyright 2011-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,24 +30,20 @@ import org.appng.application.manager.form.GroupForm;
 import org.appng.application.manager.service.Service;
 import org.appng.application.manager.service.ServiceAware;
 import org.appng.core.domain.GroupImpl;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Provides CRUD-operations for a {@link GroupImpl}.
  * 
  * @author Matthias Müller
- * 
  */
 
-@Lazy
+@Slf4j
 @Component
-@Scope("request")
 public class Groups extends ServiceAware implements ActionProvider<GroupForm>, DataProvider {
-	private static final Logger log = LoggerFactory.getLogger(Groups.class);
+
 	private static final String GROUP = "group";
 
 	public void perform(Site site, Application application, Environment environment, Options options, Request request,
@@ -56,18 +52,18 @@ public class Groups extends ServiceAware implements ActionProvider<GroupForm>, D
 		String errorMessage = null;
 		String okMessage = null;
 		Service service = getService();
-		Integer groupId = request.convert(options.getOptionValue(GROUP, ID), Integer.class);
+		Integer groupId = options.getInteger(GROUP, ID);
 		try {
 			if (ACTION_CREATE.equals(action)) {
-				service.createGroup(groupForm, site, fp);
+				service.createGroup(request, groupForm, site, fp);
 				okMessage = MessageConstants.GROUP_CREATED;
 			} else if (ACTION_UPDATE.equals(action)) {
 				groupForm.getGroup().setId(groupId);
-				service.updateGroup(site, groupForm, fp);
+				service.updateGroup(request, site, groupForm, fp);
 				okMessage = MessageConstants.GROUP_UPDATED;
 			} else if (ACTION_DELETE.equals(action)) {
 				errorMessage = MessageConstants.GROUP_DELETE_ERROR;
-				service.deleteGroup(groupId, fp);
+				service.deleteGroup(request, groupId, fp);
 				okMessage = MessageConstants.GROUP_DELETED;
 			}
 			String message = request.getMessage(okMessage, groupId);
@@ -84,13 +80,14 @@ public class Groups extends ServiceAware implements ActionProvider<GroupForm>, D
 	public DataContainer getData(Site site, Application application, Environment environment, Options options,
 			Request request, FieldProcessor fp) {
 		Service service = getService();
-		Integer groupId = request.convert(options.getOptionValue(GROUP, ID), Integer.class);
+		Integer groupId = options.getInteger(GROUP, ID);
 		DataContainer data = null;
 		if (null == groupId && ACTION_CREATE.equals(getAction(options))) {
 			data = service.getNewGroup(site, fp);
 		} else {
 			try {
-				data = service.searchGroups(fp, site, null, groupId);
+				String groupName = options.getString(GROUP, "groupName");
+				data = service.searchGroups(fp, site, null, groupId, groupName);
 			} catch (BusinessException ex) {
 				String message = request.getMessage(ex.getMessageKey(), ex.getMessageArgs());
 				log.error(message, ex);

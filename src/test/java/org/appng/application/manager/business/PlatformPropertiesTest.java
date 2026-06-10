@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2017 the original author or authors.
+ * Copyright 2011-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,11 +23,13 @@ import org.appng.api.FieldProcessor;
 import org.appng.api.ProcessingException;
 import org.appng.api.SiteProperties;
 import org.appng.api.model.Property;
+import org.appng.api.model.Property.Type;
 import org.appng.api.model.SimpleProperty;
 import org.appng.api.support.CallableAction;
 import org.appng.api.support.CallableDataSource;
 import org.appng.application.manager.form.PropertyForm;
 import org.appng.core.domain.PropertyImpl;
+import org.appng.testsupport.validation.WritingXmlValidator;
 import org.appng.xml.platform.FieldDef;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
@@ -38,6 +40,10 @@ import org.junit.runners.MethodSorters;
 public class PlatformPropertiesTest extends AbstractTest {
 
 	private static final String PROPERTY_EVENT = "propertyEvent";
+
+	static {
+		WritingXmlValidator.writeXml = false;
+	}
 
 	@Test
 	public void testCreate() throws ProcessingException, IOException {
@@ -56,8 +62,38 @@ public class PlatformPropertiesTest extends AbstractTest {
 		form.getProperty().setClob("foo");
 		CallableAction action = getCreateAction().getCallableAction(form);
 		FieldProcessor fp = action.perform();
-		assertError(fp.getField("property.defaultString"), "Please set the value or the clob-value.");
-		assertError(fp.getField("property.clob"), "Please set the value or the clob-value.");
+		assertError(fp.getField("property.defaultString"), "Please set the value or the multiline value.");
+		assertError(fp.getField("property.clob"), "Please set the value or the multiline value.");
+	}
+
+	@Test
+	public void testCreateBoolean() throws ProcessingException, IOException {
+		PropertyImpl booleanProp = new PropertyImpl("booleanProp", null);
+		booleanProp.setDescription("this is bool, man!");
+		PropertyForm form = new PropertyForm(booleanProp);
+		form.getProperty().setDefaultString("true");
+		CallableAction action = getCreateAction().getCallableAction(form);
+		action.perform();
+
+		CallableDataSource dataSource = getDataSource("property").withParam("id", "platform.booleanProp")
+				.getCallableDataSource();
+		dataSource.perform("test");
+		validate(dataSource.getDatasource());
+	}
+
+	@Test
+	public void testCreateMultiline() throws ProcessingException, IOException {
+		PropertyImpl multilineProp = new PropertyImpl("multilineProp", null);
+		multilineProp.setDescription("Toto - Hold the line");
+		PropertyForm form = new PropertyForm(multilineProp);
+		form.getProperty().setClob("Hold the line,\nlove isn't always on time,\noh oh oh");
+		CallableAction action = getCreateAction().getCallableAction(form);
+		action.perform();
+
+		CallableDataSource dataSource = getDataSource("property").withParam("id", "platform.multilineProp")
+				.getCallableDataSource();
+		dataSource.perform("test");
+		validate(dataSource.getDatasource());
 	}
 
 	private void assertError(FieldDef field, String message) {
@@ -71,7 +107,7 @@ public class PlatformPropertiesTest extends AbstractTest {
 
 	@Test
 	public void testShowAll() throws ProcessingException, IOException {
-		addParameter("sortPlatformProperties", "id:asc");
+		addParameter("sortPlatformProperties", "shortName:asc");
 		initParameters();
 		CallableDataSource dataSource = getDataSource("platformProperties").getCallableDataSource();
 		dataSource.perform("test");
@@ -89,6 +125,7 @@ public class PlatformPropertiesTest extends AbstractTest {
 	@Test
 	public void testUpdate() throws ProcessingException, IOException {
 		PropertyImpl property = new PropertyImpl("testproperty", "7", "9");
+		property.setType(Type.INT);
 		property.setClob("");
 		CallableAction action = getUpdateAction(new PropertyForm(property));
 		FieldProcessor perform = action.perform();
@@ -103,23 +140,22 @@ public class PlatformPropertiesTest extends AbstractTest {
 	@Test
 	public void testUpdateStringOrClob() throws ProcessingException, IOException {
 		PropertyImpl property = new PropertyImpl("testproperty", "7", "9");
+		property.setType(Type.INT);
 		property.setClob("aa");
 		CallableAction action = getUpdateAction(new PropertyForm(property));
 		FieldProcessor fp = action.perform();
-		assertError(fp.getField("property.actualString"), "Please set the value or the clob-value.");
-		assertError(fp.getField("property.clob"), "Please set the value or the clob-value.");
+		FieldDef value = fp.getField("property.value");
+		Assert.assertNull(value.getMessages());
 	}
 
 	protected CallableAction getUpdateAction(PropertyForm form) throws ProcessingException {
-		ActionCall actionCall = getAction(PROPERTY_EVENT, "update-platform-property")
-				.withParam(FORM_ACTION, "update-platform-property").withParam("propertyid", "platform.testproperty");
-		CallableAction action = actionCall.getCallableAction(form);
-		return action;
+		return getAction(PROPERTY_EVENT, "update-platform-property").withParam(FORM_ACTION, "update-platform-property")
+				.withParam("propertyid", "platform.testproperty").getCallableAction(form);
 	}
 
 	@Override
 	protected List<Property> getSiteProperties(String prefix) {
-		List<Property> siteProperties = new ArrayList<Property>();
+		List<Property> siteProperties = new ArrayList<>();
 		siteProperties.add(new SimpleProperty(prefix + SiteProperties.SERVICE_PATH, "/service"));
 		siteProperties.add(new SimpleProperty(prefix + SiteProperties.MANAGER_PATH, "ws"));
 		siteProperties.add(new SimpleProperty(prefix + SiteProperties.DEFAULT_PAGE_SIZE, "10"));

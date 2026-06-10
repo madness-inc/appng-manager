@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2017 the original author or authors.
+ * Copyright 2011-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,13 +34,9 @@ import org.appng.api.Webservice;
 import org.appng.api.XMLTaglet;
 import org.appng.api.model.Application;
 import org.appng.api.model.Site;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-@Lazy
 @Component
-@Scope("request")
 public class Beans implements DataProvider {
 
 	@Override
@@ -49,7 +45,7 @@ public class Beans implements DataProvider {
 		String siteName = opts.getOptionValue("application", "siteName");
 		String applicationName = opts.getOptionValue("application", "appName");
 		Site selectedSite = RequestUtil.getSiteByName(env, siteName);
-		Set<BeanInfo> beanInfos = new TreeSet<BeanInfo>();
+		Set<BeanInfo> beanInfos = new TreeSet<>();
 		if (null != selectedSite) {
 			Application application = selectedSite.getApplication(applicationName);
 			if (null != application) {

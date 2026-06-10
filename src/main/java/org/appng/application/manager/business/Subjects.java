@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2017 the original author or authors.
+ * Copyright 2011-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,24 +35,20 @@ import org.appng.application.manager.form.SubjectForm;
 import org.appng.application.manager.service.Service;
 import org.appng.application.manager.service.ServiceAware;
 import org.appng.core.domain.SubjectImpl;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Provides CRUD-operations for a {@link SubjectImpl}.
  * 
  * @author Matthias Müller
- * 
  */
 
-@Lazy
+@Slf4j
 @Component
-@Scope("request")
 public class Subjects extends ServiceAware implements DataProvider, ActionProvider<SubjectForm> {
-	private static final Logger log = LoggerFactory.getLogger(Subjects.class);
+
 	private static final String SUBJECT = "subject";
 
 	public void perform(Site site, Application application, Environment environment, Options options, Request request,
@@ -61,18 +57,18 @@ public class Subjects extends ServiceAware implements DataProvider, ActionProvid
 		String errorMessage = null;
 		String okMessage = null;
 		Service service = getService();
-		Integer subjectId = request.convert(options.getOptionValue(SUBJECT, ID), Integer.class);
+		Integer subjectId = options.getInteger(SUBJECT, ID);
 		try {
 			if (ACTION_CREATE.equals(action)) {
 				errorMessage = MessageConstants.SUBJECT_CREATE_ERROR;
-				service.createSubject(environment.getLocale(), valueHolder, fp);
+				service.createSubject(request, environment.getLocale(), valueHolder, fp, site.getPasswordPolicy());
 				okMessage = MessageConstants.SUBJECT_CREATED;
 			} else if (ACTION_UPDATE.equals(action)) {
 				SubjectImpl subject = valueHolder.getSubject();
 				subject.setId(subjectId);
 				okMessage = MessageConstants.SUBJECT_UPDATED;
 				errorMessage = MessageConstants.SUBJECT_UPDATE_ERROR;
-				Boolean isUpdated = service.updateSubject(valueHolder, fp);
+				Boolean isUpdated = service.updateSubject(request, valueHolder, fp, site.getPasswordPolicy());
 				if (isUpdated) {
 					String passwordMessage = request.getMessage(MessageConstants.SUBJECT_PASSWORD_UPDATED, subjectId);
 					fp.addOkMessage(passwordMessage);
@@ -81,7 +77,7 @@ public class Subjects extends ServiceAware implements DataProvider, ActionProvid
 			} else if (ACTION_DELETE.equals(action)) {
 				errorMessage = MessageConstants.SUBJECT_DELETE_ERROR;
 				Subject currentSubject = environment.getSubject();
-				service.deleteSubject(currentSubject, subjectId, fp);
+				service.deleteSubject(request, currentSubject, subjectId, fp);
 				okMessage = MessageConstants.SUBJECT_DELETED;
 			}
 			if (null != okMessage) {
@@ -98,12 +94,12 @@ public class Subjects extends ServiceAware implements DataProvider, ActionProvid
 	public DataContainer getData(Site site, Application application, Environment environment, Options options,
 			Request request, FieldProcessor fp) {
 		Service service = getService();
-		Integer subjectId = request.convert(options.getOptionValue(SUBJECT, ID), Integer.class);
+		Integer subjectId = options.getInteger(SUBJECT, ID);
 		List<String> languages = site.getProperties().getList(SiteProperties.SUPPORTED_LANGUAGES, ",");
 		String defaultTimezone = site.getProperties().getString(Platform.Property.TIME_ZONE);
 		DataContainer data = null;
 		if (subjectId == null && ACTION_CREATE.equals(getAction(options))) {
-			data = service.getNewSubject(fp, defaultTimezone, languages);
+			data = service.getNewSubject(request, fp, defaultTimezone, languages);
 		} else {
 			try {
 				data = service.searchSubjects(request, fp, subjectId, defaultTimezone, languages);

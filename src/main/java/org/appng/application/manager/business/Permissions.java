@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2017 the original author or authors.
+ * Copyright 2011-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,24 +29,19 @@ import org.appng.application.manager.MessageConstants;
 import org.appng.application.manager.service.Service;
 import org.appng.application.manager.service.ServiceAware;
 import org.appng.core.domain.PermissionImpl;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Provides CRUD-operations for a {@link PermissionImpl}.
  * 
  * @author Matthias Müller
- * 
  */
 
-@Lazy
+@Slf4j
 @Component
-@Scope("request")
 public class Permissions extends ServiceAware implements ActionProvider<PermissionImpl>, DataProvider {
-	private static final Logger log = LoggerFactory.getLogger(Permissions.class);
 
 	public void perform(Site site, Application application, Environment environment, Options options, Request request,
 			PermissionImpl permission, FieldProcessor fp) {
@@ -55,19 +50,19 @@ public class Permissions extends ServiceAware implements ActionProvider<Permissi
 		String errorMessage = null;
 		String okMessage = null;
 		Service service = getService();
-		Integer permissionId = request.convert(options.getOptionValue(ID, ID), Integer.class);
+		Integer permissionId = options.getInteger(ID, ID);
 		try {
 			if (ACTION_CREATE.equals(action)) {
-				Integer applicationId = request.convert(options.getOptionValue(APPLICATION, ID), Integer.class);
-				service.createPermission(permission, applicationId, fp);
+				Integer applicationId = options.getInteger(APPLICATION, ID);
+				service.createPermission(request, permission, applicationId, fp);
 				okMessage = MessageConstants.PERMISSION_CREATED;
 			} else if (ACTION_UPDATE.equals(action)) {
 				permission.setId(permissionId);
-				service.updatePermission(permission, fp);
+				service.updatePermission(request, permission, fp);
 				okMessage = MessageConstants.PERMISSION_UPDATED;
 			} else if (ACTION_DELETE.equals(action)) {
 				errorMessage = MessageConstants.PERMISSION_DELETE_ERROR;
-				service.deletePermission(permissionId, fp);
+				service.deletePermission(request, permissionId, fp);
 				okMessage = MessageConstants.PERMISSION_DELETED;
 			}
 			String message = request.getMessage(okMessage, permissionId);
@@ -84,8 +79,8 @@ public class Permissions extends ServiceAware implements ActionProvider<Permissi
 	public DataContainer getData(Site site, Application application, Environment environment, Options options,
 			Request request, FieldProcessor fp) {
 		Service service = getService();
-		Integer permissionId = request.convert(options.getOptionValue(ID, ID), Integer.class);
-		Integer applicationId = request.convert(options.getOptionValue(APPLICATION, ID), Integer.class);
+		Integer permissionId = options.getInteger(ID, ID);
+		Integer applicationId = options.getInteger(APPLICATION, ID);
 		DataContainer data = null;
 		if (permissionId == null && ACTION_CREATE.equals(getAction(options))) {
 			data = service.getNewPermission(fp);

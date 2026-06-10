@@ -1,9 +1,99 @@
+
 == Users and groups
+appNG features a fine-grained user role and permission model. The key elements are:
 
-=== Creating a user
+[width="100%",options="header"]
+|====================
+| Element | Description
+| permission | The right to see or do something. Permissions are defined by the application in the `application.xml` file. It can be applied to a lot of elements like actions, datasources, pages, linkpanels and fields. Furthermore, application developers can test a permission programmatically.
+| role | An aggregation of permissions of one application. Roles are defined in the `application.xml` file.
+| group | An aggregation of roles, also from different applications. Created and defined in the appNG manager. On installation the group `Administrators` is created by default. All admin roles from all default applications (appng-manager, appng-scheduler) are automatically assigned to that group.
+| user | An account in appNG. Could be a pure appNG-local user or a user from an LDAP repository or Active Directory. A user can have multiple groups. In default installations, the user `admin` is created and gets assigned to the group `Administrators`.
+|====================
 
-=== Editing a user
+Permissions are added to a user by assigning groups to users and roles to groups and permissions to roles. The assignment has always a contributing nature. It will not happen that an assignment will remove the permission set by another assignment. The user will always have the super-set of all permissions of all groups and roles assigned to him.
 
-=== Creating a group
+The users page shows a list of all configured users.
 
-=== Editing a group
+=== LDAP connectivity
+If the type `LDAP user` or `LDAP Group` is used, authentication will use an external LDAP server.
+
+In case of `LDAP user` the username is mapped to an LDAP principal and a simple bind is done against the LDAP server. The user is authenticated, if the bind succeeds. Note that the configured `LDAP user` name and the one entered in the login mask, are the same, when using `LDAP user`.
+
+In case of `LDAP Group` the configured name is interpreted as an LDAP group, which is resolved to the actual usernames. This comprises three steps:
+
+. The username entered in the login mask is used to bind in the same way as described for `LDAP user` above.
+. The configured `LDAP Group` name is mapped to members by looking up the `member` attributes of the object `cn=<name>,_ldapGroupBaseDn_`. This step makes use of the service credentials configured via `ldapUser` and `ldapPassword`, to execute the lookup.
+. The username entered in the login mask must be present in the `_ldapIdAttribute_` of at least one member object, found in the previous step, in order to be successful.
+
+.Principal Mapping
+How usernames are mapped to ldap principals depends on the value of `ldapPrincipalScheme`:
+
+* "`DN`" : results in `_ldapIdAttribute_=<username>,_ldapUserBaseDn_`
+* "`UPN`": results in `<username>@_ldapDomain_`
+* "`SAM`": results in `_ldapDomain_\<username>`
+
+The schemes "`UPN`" and "`SAM`" are Windows AD specific (see  https://msdn.microsoft.com/en-us/library/cc223499.aspx[MSDN on supported authentication methods in AD]).
+The default value is "`SAM`" to remain backward compatibility with older appNG versions
+
+[width="100%",options="header"]
+|====================
+| Property              | Description | Example
+| `ldapDomain`          | The Netbios Domain name to use, when "SAM" is used as principal scheme | `EXAMPLE`
+| `ldapGroupBaseDn`     | The base-DN for LDAP-groups |`OU=Groups,DC=example,DC=com`
+| `ldapHost`            | The LDAP host in provider URL format (`ldap[s]://<host>:<port>`). Note that you might need to add CA certificates to the truststore of the executing JVM if you enable "`ldaps`". | `ldap:<host>:<port>`
+| `ldapIdAttribute`     | The name of the LDAP-attribute containing the user-id used for authentication | `sAMAccountName`
+| `ldapPassword`        | Password of the LDAP service-user | `secret`
+| `ldapPrincipalScheme` | How the LDAP principal is built from a given username when logging in: "`DN`", "`UPN`" or "`SAM`" as described above. | SAM
+| `ldapStartTls`        | Use STARTTLS for the LDAP connection. If you set this to `true` the value of `ldapHost` should begin with `ldap:` (not `ldaps:`), because STARTTLS and LDAP over SSL (which is used when `ldaps:` is in place) are mutually exclusive.|`false`
+| `ldapUser`            | The name of the LDAP service-user for general LDAP lookups. If the value is a Distinguished Name (e.g. "`cn=Service User,dc=mycompany,dc=com`") it will be used directly as LDAP principal. Otherwise the principal will be derived according to the value specified in `ldapPrincipalScheme`. | `serviceUser`
+| `ldapUserBaseDn`      | The base-DN which is used to map a plain username to a Distinguished Name, if "DN" is used as principal scheme. | `OU=Users,DC=example,DC=com`
+and LDAP over SSL (which is used when "`ldaps:`" is in place) are mutually exclusive.|`false`
+|====================
+
+Read more about site properties in <<Configuring site properties>> in this manual.
+
+=== Users
+
+==== Creating a user
+Above and below the users list a link with the action to create a user is displayed. When clicking this link a new form opens, where the user attributes can be defined:
+
+[width="100%",options="header"]
+|====================
+| Attribute  | Description | Example
+| Name | User name as used for the login. Must be unique. | `johndoe`
+| Real Name | The person's real name | `John Doe`
+| E-mail | E-Mail address of the person | `john.doe@example.com`
+| Description | Some additional info about the user | `Just a test account`
+| Type | One of `Local user`, `LDAP User` or `LDAP Group` | `Local user`
+| Language | The preferred language of the user. Shows available appNG languages. | `en`
+| Timezone | The users timezone | `Berlin (GMT+01:00)`
+| Password | Must have at least 6 chars and max 64 chars | `v3ry53cr37`
+| Password Confirmation | Must contain the same value as the `Password` field | `v3ry53cr37`
+| Groups | Select initial groups of the user | `Administrators`
+|====================
+
+==== Editing a user
+The default action of an entry in the users list is the action to edit a user. This opens a form where nearly all of the user attributes can be changed, except the internal ID and the user name.
+
+=== Groups
+On the page `Users` there is another section `Groups`. It lists all available groups configured in appNG. On appNG installation, the group Administrators is created. This is special group because if an application defines an admin-role in the `application.xml` file, this role is automatically assigned to this group. It is also not possible to delete this group.
+
+The overview table provides actions to create, edit and delete groups.
+
+==== Creating a group
+When clicking the `Create group` action on top or bottom of the table, a new form opens where the attributes of the group can be defined:
+
+[width="100%",options="header"]
+|====================
+| Attribute  | Description
+| Name | Name of the group. Must be unique.
+| Description | Some additional info about the group.
+| Roles | Select roles from different applications to assign them to the group. Only roles of those applications are available which are assigned to the current site.
+|====================
+
+==== Editing a group
+In the overview table of groups is an action per group to edit it. Except the internal ID, all attributes and the role assignment of the group can be changed.
+
+==== Deleting a group
+In the overview table of groups is an action per group to delete it. The group `Administrators` is a special group and cannot be deleted. After the deletion has been confirmed, the group and all assignments to users are completely removed.

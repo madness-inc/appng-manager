@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2017 the original author or authors.
+ * Copyright 2011-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,26 +28,21 @@ import org.appng.api.model.Application;
 import org.appng.api.model.Identifier;
 import org.appng.api.model.Site;
 import org.appng.application.manager.service.ServiceAware;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 /**
  * Provides CRUD-operations for a {@link org.appng.core.domain.Template}.
  * 
  * @author Matthias Müller
- * 
  */
 
-@Lazy
 @Component
-@Scope("request")
 public class Templates extends ServiceAware implements DataProvider, ActionProvider<Void> {
 
 	public void perform(Site site, Application application, Environment environment, Options options, Request request,
 			Void applicationBean, FieldProcessor fp) {
 		if ("delete".equals(options.getOptionValue("template", "action"))) {
-			getService().deleteTemplate(options.getOptionValue("template", "templateName"), fp);
+			getService().deleteTemplate(request, options.getOptionValue("template", "templateName"), fp);
 		}
 	}
 

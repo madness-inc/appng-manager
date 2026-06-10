@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2017 the original author or authors.
+ * Copyright 2011-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,22 +35,17 @@ import org.appng.api.model.Property;
 import org.appng.api.model.Site;
 import org.appng.application.manager.service.ServiceAware;
 import org.appng.core.domain.PropertyImpl;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.context.annotation.Scope;
 import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.stereotype.Component;
 
 /**
- * A {@link DataProvider} providing the available messages from an
- * {@link ResourceBundle} for a {@link Application} or the platform.
+ * A {@link DataProvider} providing the available messages from an {@link ResourceBundle} for a {@link Application} or
+ * the platform.
  * 
  * @author Matthias Müller
- * 
  */
 
-@Lazy
 @Component
-@Scope("request")
 public class Dictionary extends ServiceAware implements DataProvider {
 
 	private static final String MESSAGES_CORE = "messages-core";
@@ -58,9 +53,9 @@ public class Dictionary extends ServiceAware implements DataProvider {
 	public DataContainer getData(Site site, Application application, Environment environment, Options options,
 			Request request, FieldProcessor fp) {
 		ResourceBundle bundle = null;
-		List<Property> properties = new ArrayList<Property>();
+		List<Property> properties = new ArrayList<>();
 
-		Integer applicationId = request.convert(options.getOptionValue("application", "id"), Integer.class);
+		Integer applicationId = options.getInteger("application", "id");
 		Locale locale = environment.getLocale();
 		if (null != applicationId) {
 			ResourceBundleMessageSource messageSource = getBundleForApplication(site, environment, applicationId);
@@ -89,7 +84,7 @@ public class Dictionary extends ServiceAware implements DataProvider {
 	}
 
 	private Collection<Property> getPropertiesFromBundle(ResourceBundle bundle) {
-		SortedSet<Property> properties = new TreeSet<Property>();
+		SortedSet<Property> properties = new TreeSet<>();
 		if (null != bundle) {
 			Enumeration<String> keys = bundle.getKeys();
 			while (keys.hasMoreElements()) {

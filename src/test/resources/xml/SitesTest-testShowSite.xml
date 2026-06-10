@@ -6,14 +6,14 @@
             <param name="siteid">1</param>
         </params>
         <meta-data binding="site" bindClass="org.appng.application.manager.form.SiteForm">
-            <field name="id" type="int" format="#" readonly="true" binding="site.id">
-                <label id="id">ID</label>
-            </field>
             <field name="name" type="text" readonly="true" binding="site.name">
                 <label id="name">Name</label>
             </field>
             <field name="host" type="text" binding="site.host">
-                <label id="host">Host</label>
+                <label id="host">Hostname</label>
+            </field>
+            <field name="hostAliases" type="longtext" binding="hostAliases">
+                <label id="hostAliases">Hostname aliases (one per line)</label>
             </field>
             <field name="domain" type="text" binding="site.domain">
                 <label id="domain">Domain</label>
@@ -21,8 +21,8 @@
             <field name="description" type="longtext" binding="site.description">
                 <label id="description">Description</label>
             </field>
-            <field name="active" type="checkbox" binding="site.active">
-                <label id="active">active</label>
+            <field name="active" type="checkbox" readonly="false" binding="site.active">
+                <label id="active">Active</label>
             </field>
             <field name="template" type="list:radio" binding="template">
                 <label id="template">Template</label>
@@ -34,17 +34,20 @@
             <title id="template">Template</title>
         </selection>
         <result>
-            <field name="id" type="int">
-                <value>1</value>
-            </field>
             <field name="name" type="text">
-                <value>localhost</value>
+                <value>site1</value>
             </field>
             <field name="host" type="text">
-                <value>localhost</value>
+                <value>hostname1.domain.tld</value>
+            </field>
+            <field name="hostAliases" type="longtext">
+                <value>alias1
+alias2
+alias3
+alias4-stays-unique</value>
             </field>
             <field name="domain" type="text">
-                <value>localhost</value>
+                <value>https://hostname1.domain.tld</value>
             </field>
             <field name="description" type="longtext">
                 <value></value>

@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2017 the original author or authors.
+ * Copyright 2011-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,31 +27,28 @@ import org.appng.api.Options;
 import org.appng.api.Request;
 import org.appng.api.model.Application;
 import org.appng.api.model.Site;
+import org.appng.api.support.SelectionBuilder;
 import org.appng.application.manager.MessageConstants;
 import org.appng.application.manager.service.Service;
 import org.appng.application.manager.service.ServiceAware;
-import org.appng.core.model.InstallablePackage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.context.annotation.Scope;
+import org.appng.xml.platform.Selection;
+import org.appng.xml.platform.SelectionGroup;
+import org.appng.xml.platform.SelectionType;
 import org.springframework.stereotype.Component;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
- * 
  * @author Matthias Herlitzius
- * 
  */
 
-@Lazy
+@Slf4j
 @Component
-@Scope("request")
 public class Installation extends ServiceAware implements DataProvider, ActionProvider<Void> {
-
-	private static final Logger log = LoggerFactory.getLogger(Installation.class);
 
 	public static final String REPOSITORY = "repository";
 	private static final String PACKAGE_OPTION = "package";
+	private static final String PACKAGE_FILTER = "packageFilter";
 	private static final String PACKAGE_NAME = "packageName";
 	private static final String PACKAGE_VERSION = "packageVersion";
 	private static final String PACKAGE_TIMESTAMP = "packageTimestamp";
@@ -62,22 +59,21 @@ public class Installation extends ServiceAware implements DataProvider, ActionPr
 		String errorMessage = null;
 		String okMessage = null;
 		Service service = getService();
-		Integer repositoryId = request.convert(options.getOptionValue(REPOSITORY, ID), Integer.class);
-		String packageName = request.convert(options.getOptionValue(PACKAGE_OPTION, PACKAGE_NAME), String.class);
-		String packageVersion = request.convert(options.getOptionValue(PACKAGE_OPTION, PACKAGE_VERSION), String.class);
-		String packageTimestamp = request.convert(options.getOptionValue(PACKAGE_OPTION, PACKAGE_TIMESTAMP),
-				String.class);
+		Integer repositoryId = options.getInteger(REPOSITORY, ID);
+		String packageName = options.getString(PACKAGE_OPTION, PACKAGE_NAME);
+		String packageVersion = options.getString(PACKAGE_OPTION, PACKAGE_VERSION);
+		String packageTimestamp = options.getString(PACKAGE_OPTION, PACKAGE_TIMESTAMP);
 
 		try {
 			if (ACTION_INSTALL.equals(action)) {
 				errorMessage = MessageConstants.PACKAGE_INSTALL_ERROR;
-				service.installPackage(repositoryId, packageName, packageVersion, packageTimestamp, fp);
+				service.installPackage(request, repositoryId, packageName, packageVersion, packageTimestamp, fp);
 				okMessage = MessageConstants.PACKAGE_INSTALLED;
-				String reloadMessage = request.getMessage(MessageConstants.RELOAD_PLATFORM);
+				String reloadMessage = request.getMessage(MessageConstants.RELOAD_SITE);
 				fp.addNoticeMessage(reloadMessage);
 			} else if (ACTION_DELETE_PACKAGE.equals(action)) {
 				errorMessage = MessageConstants.PACKAGE_DELETE_ERROR;
-				service.deletePackageVersion(repositoryId, packageName, packageVersion, packageTimestamp, fp);
+				service.deletePackageVersion(request, repositoryId, packageName, packageVersion, packageTimestamp, fp);
 				okMessage = MessageConstants.PACKAGE_DELETED;
 			}
 			String message = request.getMessage(okMessage, repositoryId, packageName, packageVersion);
@@ -92,17 +88,25 @@ public class Installation extends ServiceAware implements DataProvider, ActionPr
 	public DataContainer getData(Site site, Application application, Environment environment, Options options,
 			Request request, FieldProcessor fp) {
 		Service service = getService();
-		Integer repositoryId = request.convert(options.getOptionValue(REPOSITORY, ID), Integer.class);
-		String applicationName = request.convert(options.getOptionValue(PACKAGE_OPTION, PACKAGE_NAME), String.class);
+		Integer repositoryId = options.getInteger(REPOSITORY, ID);
+		String packageFilter = options.getString(REPOSITORY, PACKAGE_FILTER);
+		String applicationName = options.getString(PACKAGE_OPTION, PACKAGE_NAME);
 		DataContainer data = new DataContainer(fp);
 		try {
 			if (null != repositoryId && null == applicationName) {
-				data = service.searchInstallablePackages(fp, repositoryId);
+
+				Selection packageFilterSelection = new SelectionBuilder<>("pf").defaultOption("pf", packageFilter)
+						.title(MessageConstants.NAME).type(SelectionType.TEXT).select(packageFilter).build();
+				SelectionGroup filter = new SelectionGroup();
+				filter.getSelections().add(packageFilterSelection);
+				data = service.searchInstallablePackages(request, fp, repositoryId, packageFilter);
+				data.getSelectionGroups().add(filter);
 			} else if (null != repositoryId && null != applicationName) {
-				data = service.searchPackageVersions(fp, repositoryId, applicationName);
+				data = service.searchPackageVersions(request, fp, repositoryId, applicationName);
 			}
 		} catch (BusinessException ex) {
-			data.setPage(new ArrayList<InstallablePackage>(), fp.getPageable());
+			log.error("Error while retrieving packages from repository", ex);
+			data.setPage(new ArrayList<>(), fp.getPageable());
 		}
 		return data;
 	}

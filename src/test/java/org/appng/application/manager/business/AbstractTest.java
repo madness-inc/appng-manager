@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2017 the original author or authors.
+ * Copyright 2011-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,26 +15,30 @@
  */
 package org.appng.application.manager.business;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
 import javax.persistence.EntityManager;
 
-import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.io.FileUtils;
 import org.appng.api.Platform;
 import org.appng.api.SiteProperties;
-import org.appng.api.auth.PasswordPolicy;
 import org.appng.api.model.Property;
 import org.appng.api.model.SimpleProperty;
 import org.appng.api.support.environment.DefaultEnvironment;
+import org.appng.application.manager.ManagerSettings;
 import org.appng.core.repository.ApplicationRepository;
 import org.appng.core.repository.GroupRepository;
 import org.appng.core.repository.PermissionRepository;
+import org.appng.core.repository.PropertyRepository;
 import org.appng.core.repository.RepoRepository;
 import org.appng.core.repository.RoleRepository;
 import org.appng.core.repository.SiteApplicationRepository;
 import org.appng.core.repository.SiteRepository;
+import org.appng.core.security.ConfigurablePasswordPolicy;
 import org.appng.testsupport.TestBase;
 import org.appng.testsupport.validation.WritingXmlValidator;
 import org.junit.Before;
@@ -45,7 +49,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.test.context.ContextConfiguration;
 
 @Ignore
-@ContextConfiguration(locations = { TestBase.TESTCONTEXT_CORE, TestBase.TESTCONTEXT_JPA }, initializers = AbstractTest.class)
+@ContextConfiguration(locations = { TestBase.TESTCONTEXT_CORE,
+		TestBase.TESTCONTEXT_JPA }, initializers = AbstractTest.class)
 public class AbstractTest extends TestBase {
 
 	@Autowired
@@ -70,6 +75,9 @@ public class AbstractTest extends TestBase {
 	PermissionRepository permissionRepository;
 
 	@Autowired
+	PropertyRepository propertyRepository;
+
+	@Autowired
 	@Qualifier("entityManager")
 	EntityManager em;
 
@@ -77,11 +85,17 @@ public class AbstractTest extends TestBase {
 		WritingXmlValidator.writeXml = false;
 	}
 
-	AbstractTest() {
-		super("appng-manager", "application-home");
+	protected AbstractTest() {
+		super("appng-manager", APPLICATION_HOME);
 		setUseFullClassname(false);
 		setEntityPackage("org.appng.core.domain");
 		setRepositoryBase("org.appng.core.repository");
+		try {
+			FileUtils.copyInputStreamToFile(getClass().getClassLoader().getResourceAsStream("log4j.properties"),
+					new File("target/ROOT/WEB-INF/conf/log4j.properties"));
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	@Before
@@ -89,20 +103,9 @@ public class AbstractTest extends TestBase {
 		((DefaultEnvironment) environment).setSubject(subject);
 		Mockito.when(subject.getId()).thenReturn(42);
 		Mockito.when(site.getId()).thenReturn(1);
-		Mockito.when(site.getPasswordPolicy()).thenReturn(new PasswordPolicy() {
-
-			public boolean isValidPassword(char[] password) {
-				return true;
-			}
-
-			public String getErrorMessageKey() {
-				return null;
-			}
-
-			public String generatePassword() {
-				return RandomStringUtils.random(6);
-			}
-		});
+		ConfigurablePasswordPolicy policy = new ConfigurablePasswordPolicy();
+		policy.configure(null);
+		Mockito.when(site.getPasswordPolicy()).thenReturn(policy);
 	}
 
 	@Override
@@ -110,6 +113,10 @@ public class AbstractTest extends TestBase {
 		Properties properties = super.getProperties();
 		properties.put("hibernate.show_sql", "false");
 		properties.put("hibernate.format_sql", "false");
+		properties.put("platform.platformRootPath", "target/ROOT");
+		properties.put("site.mailHost", "localHost");
+		properties.put("site.mailPort", "25");
+		properties.put(ManagerSettings.MAX_FILTERABLE_CACHE_ENTRIES, "50");
 		return properties;
 	}
 
@@ -123,10 +130,13 @@ public class AbstractTest extends TestBase {
 
 	@Override
 	protected List<Property> getSiteProperties(String prefix) {
-		List<Property> siteProperties = new ArrayList<Property>();
+		List<Property> siteProperties = new ArrayList<>();
 		siteProperties.add(new SimpleProperty(prefix + SiteProperties.SERVICE_PATH, "services"));
 		siteProperties.add(new SimpleProperty(prefix + SiteProperties.MANAGER_PATH, "ws"));
 		siteProperties.add(new SimpleProperty(prefix + SiteProperties.DEFAULT_PAGE_SIZE, "10"));
+		siteProperties.add(new SimpleProperty(prefix + SiteProperties.CACHE_TIME_TO_LIVE, "36000"));
+		siteProperties.add(new SimpleProperty(prefix + SiteProperties.CACHE_STATISTICS, "true"));
+		siteProperties.add(new SimpleProperty(prefix + SiteProperties.CACHE_ENABLED, "true"));
 		return siteProperties;
 	}
 

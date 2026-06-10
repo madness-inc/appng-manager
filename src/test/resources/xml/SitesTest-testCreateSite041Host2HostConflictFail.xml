@@ -13,35 +13,41 @@
                 <label id="name">Name</label>
                 <validation>
                     <notNull>
-                        <message ref="site.name" class="ERROR">Field must not be empty</message>
+                        <message ref="site.name" class="ERROR" code="{validation.notNull}">Field must not be empty</message>
                     </notNull>
                     <size min="0" max="64">
-                        <message ref="site.name" class="ERROR">Enter at most 64 characters</message>
+                        <message ref="site.name" class="ERROR" code="{validation.string.max}">Enter at most 64 characters</message>
                     </size>
                     <pattern regexp="[a-zA-Z0-9\-]{3,}">
-                        <message ref="site.name" class="ERROR">Please enter a valid name, which may only consist of letters, numbers and hyphens</message>
+                        <message ref="site.name" class="ERROR" code="{validation.nameStrict}">Please enter a valid name, which may only consist of letters, numbers and hyphens</message>
                     </pattern>
                 </validation>
             </field>
             <field name="host" type="text" binding="site.host">
-                <label id="host">Host</label>
+                <label id="host">Hostname</label>
                 <validation>
                     <notNull>
-                        <message ref="site.host" class="ERROR">Field must not be empty</message>
+                        <message ref="site.host" class="ERROR" code="{validation.notNull}">Field must not be empty</message>
                     </notNull>
                     <pattern regexp="(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])">
-                        <message ref="site.host" class="ERROR">Please enter a valid host (examples: localhost example.com some.example.com)</message>
+                        <message ref="site.host" class="ERROR" code="{validation.host}">Please enter a valid host (examples: localhost example.com some.example.com)</message>
                     </pattern>
                 </validation>
+                <messages ref="host">
+                    <message ref="host" class="ERROR">Hostname 'hostname1.domain.tld' is already used as hostname or alias by site 'site1'!</message>
+                </messages>
+            </field>
+            <field name="hostAliases" type="longtext" binding="hostAliases">
+                <label id="hostAliases">Hostname aliases (one per line)</label>
             </field>
             <field name="domain" type="text" binding="site.domain">
                 <label id="domain">Domain</label>
                 <validation>
                     <notNull>
-                        <message ref="site.domain" class="ERROR">Field must not be empty</message>
+                        <message ref="site.domain" class="ERROR" code="{validation.notNull}">Field must not be empty</message>
                     </notNull>
                     <pattern regexp="(http(s?)(\://))?((([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9]))(\:[0-9]+)?">
-                        <message ref="site.domain" class="ERROR">Please enter a valid domain (examples: http://www.example.com example.com localhost:8080)</message>
+                        <message ref="site.domain" class="ERROR" code="{validation.domain}">Please enter a valid domain (examples: http://www.example.com example.com localhost:8080)</message>
                     </pattern>
                 </validation>
             </field>
@@ -49,12 +55,12 @@
                 <label id="description">Description</label>
                 <validation>
                     <size min="0" max="8192">
-                        <message ref="site.description" class="ERROR">Enter at most 8192 characters</message>
+                        <message ref="site.description" class="ERROR" code="{validation.string.max}">Enter at most 8192 characters</message>
                     </size>
                 </validation>
             </field>
             <field name="active" type="checkbox" binding="site.active">
-                <label id="active">active</label>
+                <label id="active">Active</label>
             </field>
             <field name="createRepository" type="checkbox" binding="site.createRepository">
                 <label id="site.createRepository">Create folder for JSP-contents</label>
@@ -66,9 +72,10 @@
     </config>
     <condition expression="${form_action eq 'create'}"/>
     <messages>
-        <message ref="create" class="OK">Site has been created.</message>
+        <message ref="create" class="ERROR">Failed to create the site.</message>
     </messages>
     <datasource id="new-site"/>
+    <userdata/>
     <data>
         <selection id="template">
             <title id="template">Template</title>
@@ -78,6 +85,9 @@
                 <value></value>
             </field>
             <field name="host" type="text">
+                <value></value>
+            </field>
+            <field name="hostAliases" type="longtext">
                 <value></value>
             </field>
             <field name="domain" type="text">

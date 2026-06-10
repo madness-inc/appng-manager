@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2017 the original author or authors.
+ * Copyright 2011-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,22 +15,14 @@
  */
 package org.appng.application.manager.business;
 
-import java.sql.CallableStatement;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.sql.DataSource;
 
-import net.sourceforge.squirrel_sql.fw.sql.QueryTokenizer;
-import net.sourceforge.squirrel_sql.plugins.mssql.prefs.MSSQLPreferenceBean;
-import net.sourceforge.squirrel_sql.plugins.mssql.tokenizer.MSSQLQueryTokenizer;
-import net.sourceforge.squirrel_sql.plugins.mysql.prefs.MysqlPreferenceBean;
-import net.sourceforge.squirrel_sql.plugins.mysql.tokenizer.MysqlQueryTokenizer;
-
-import org.apache.commons.lang3.StringUtils;
 import org.appng.api.ActionProvider;
 import org.appng.api.DataContainer;
 import org.appng.api.DataProvider;
@@ -44,20 +36,34 @@ import org.appng.application.manager.business.SqlExecutor.SqlStatement;
 import org.appng.application.manager.service.ServiceAware;
 import org.appng.core.domain.DatabaseConnection;
 import org.appng.core.domain.DatabaseConnection.DatabaseType;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.context.annotation.Scope;
+import org.flywaydb.core.api.configuration.Configuration;
+import org.flywaydb.core.api.configuration.FluentConfiguration;
+import org.flywaydb.core.internal.database.hsqldb.HSQLDBParser;
+import org.flywaydb.core.internal.database.postgresql.PostgreSQLParser;
+import org.flywaydb.core.internal.parser.Parser;
+import org.flywaydb.core.internal.parser.ParsingContext;
+import org.flywaydb.core.internal.resource.StringResource;
+import org.flywaydb.core.internal.sqlscript.ParserSqlScript;
+import org.flywaydb.core.internal.sqlscript.SqlScript;
 import org.springframework.dao.DataAccessException;
-import org.springframework.jdbc.core.CallableStatementCallback;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.PreparedStatementCallback;
 import org.springframework.jdbc.datasource.SingleConnectionDataSource;
 import org.springframework.jdbc.support.rowset.ResultSetWrappingSqlRowSet;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.jdbc.support.rowset.SqlRowSetMetaData;
 import org.springframework.stereotype.Component;
+import org.springframework.util.ClassUtils;
 
-@Lazy
+import com.google.common.collect.Streams;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @Component
-@Scope("request")
 public class SqlExecutor extends ServiceAware implements DataProvider, ActionProvider<SqlStatement> {
 
 	public DataContainer getData(Site site, Application application, Environment environment, Options options,
@@ -73,7 +79,7 @@ public class SqlExecutor extends ServiceAware implements DataProvider, ActionPro
 
 	public void perform(Site site, Application application, Environment environment, Options options, Request request,
 			SqlStatement formBean, FieldProcessor fieldProcessor) {
-		Integer dcId = request.convert(options.getOptionValue("connection", "id"), Integer.class);
+		Integer dcId = options.getInteger("connection", "id");
 		String sql = formBean.getContent();
 		Map<String, String> sessionParams = application.getSessionParams(site, environment);
 		sessionParams.put("sql" + dcId, sql);
@@ -81,42 +87,41 @@ public class SqlExecutor extends ServiceAware implements DataProvider, ActionPro
 		DataSource dataSource = new SingleConnectionDataSource(databaseConnection.getJdbcUrl(),
 				databaseConnection.getUserName(), new String(databaseConnection.getPassword()), true);
 		JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-		List<String> queries = getQueries(sql, databaseConnection.getType());
-		List<String> results = new ArrayList<String>();
+		List<String> queries = getQueries(sql, databaseConnection);
+		StringBuilder results = new StringBuilder();
 		for (String query : queries) {
 			SqlStatement statementResult = processSingleStatement(query, jdbcTemplate);
-			results.add("<div style='background:#F0F0F0;border:1px solid grey'>" + statementResult.getContent()
-					+ "</div>");
-			results.add(statementResult.getResult());
-			results.add("<p/>");
+			results.append("<div style='background:#F0F0F0;border:1px solid grey'>");
+			results.append(statementResult.getContent());
+			results.append("</div>");
+			results.append(statementResult.getResult());
+			results.append("<p/>");
 		}
-		String result = StringUtils.join(results, "");
+		String result = results.toString();
 		sessionParams.put("result" + dcId, result);
 	}
 
 	public SqlStatement processSingleStatement(String sql, JdbcTemplate jdbcTemplate) {
-		String result;
+		String sqlResult;
 		boolean hasError = false;
 		try {
-			result = jdbcTemplate.execute(sql, new CallableStatementCallback<String>() {
-				public String doInCallableStatement(CallableStatement ps) throws SQLException, DataAccessException {
-					String result = "";
-					ps.execute();
-					int up = ps.getUpdateCount();
-					ResultSet rs = ps.getResultSet();
-					if (null != rs) {
-						result = buildResultSetTable(new ResultSetWrappingSqlRowSet(rs));
-					} else if (up > -1) {
-						result = "<div>" + up + " row(s) affected</div>";
-					}
-					return result;
+			sqlResult = jdbcTemplate.execute(sql, (PreparedStatementCallback<String>) (ps -> {
+				String result = "";
+				ps.execute();
+				int up = ps.getUpdateCount();
+				ResultSet rs = ps.getResultSet();
+				if (null != rs) {
+					result = buildResultSetTable(new ResultSetWrappingSqlRowSet(rs));
+				} else if (up > -1) {
+					result = "<div>" + up + " row(s) affected</div>";
 				}
-			});
+				return result;
+			}));
 		} catch (DataAccessException e) {
-			result = "<div style='border:1px solid red'>" + e.getCause().getMessage() + "</div>";
+			sqlResult = "<div style='border:1px solid red'>" + e.getCause().getMessage() + "</div>";
 			hasError = true;
 		}
-		return new SqlStatement(sql, result, hasError);
+		return new SqlStatement(sql, sqlResult, hasError);
 	}
 
 	public String buildResultSetTable(SqlRowSet rowSet) {
@@ -146,68 +151,53 @@ public class SqlExecutor extends ServiceAware implements DataProvider, ActionPro
 		return sb.toString();
 	}
 
+	@Data
+	@NoArgsConstructor
+	@AllArgsConstructor
 	public static class SqlStatement {
 		private String content;
 		private String result;
 		private boolean hasError;
-
-		public SqlStatement() {
-
-		}
-
-		public SqlStatement(String content, String result, boolean hasError) {
-			this.content = content;
-			this.result = result;
-			this.hasError = hasError;
-		}
-
-		public String getContent() {
-			return content;
-		}
-
-		public void setContent(String content) {
-			this.content = content;
-		}
-
-		public String getResult() {
-			return result;
-		}
-
-		public void setResult(String result) {
-			this.result = result;
-		}
-
-		public boolean isHasError() {
-			return hasError;
-		}
-
-		public void setHasError(boolean hasError) {
-			this.hasError = hasError;
-		}
-
 	}
 
-	public List<String> getQueries(String sql, DatabaseType type) {
-		QueryTokenizer queryTokenizer = null;
+	public List<String> getQueries(String sql, DatabaseConnection conn) {
+		Configuration configuration = new FluentConfiguration().dataSource(conn.getJdbcUrl(), conn.getUserName(),
+				conn.getPasswordPlain());
+		try {
+			Parser parser = getParser(conn.getType(), configuration);
+			SqlScript sqlScript = new ParserSqlScript(parser, new StringResource(sql), null, false);
+			return Streams.stream(sqlScript.getSqlStatements())
+					.map(org.flywaydb.core.internal.sqlscript.SqlStatement::getSql).collect(Collectors.toList());
+		} catch (ReflectiveOperationException e) {
+			log.error("failed creating parser", e);
+		}
+		return new ArrayList<>();
+	}
+
+	protected Parser getParser(DatabaseType type, Configuration configuration) throws ReflectiveOperationException {
 		switch (type) {
 		case MYSQL:
-			queryTokenizer = new MysqlQueryTokenizer(new MysqlPreferenceBean());
-			break;
+			if (configuration.getUrl().contains(":mariadb:")) {
+				return createParser("mysql.mariadb.MariaDBDatabaseType", configuration);
+			} else {
+				return createParser("mysql.MySQLDatabaseType", configuration);
+			}
 		case MSSQL:
-			queryTokenizer = new MSSQLQueryTokenizer(new MSSQLPreferenceBean());
-			break;
-		case HSQL:
-			queryTokenizer = new QueryTokenizer(";", "--", true);
-			break;
+			return createParser("sqlserver.SQLServerDatabaseType", configuration);
+		case POSTGRESQL:
+			return new PostgreSQLParser(configuration, new ParsingContext());
+		default:
+			return new HSQLDBParser(configuration, new ParsingContext());
 		}
+	}
 
-		String script = sql.replaceAll("\\r\\n", " ");
-		queryTokenizer.setScriptToTokenize(script);
-		List<String> queries = new ArrayList<String>();
-		for (int i = 0; i < queryTokenizer.getQueryCount(); i++) {
-			queries.add(queryTokenizer.nextQuery());
+	private Parser createParser(String className, Configuration configuration) throws ReflectiveOperationException {
+		String packagePrefix = "org.flywaydb.database.";
+		if (!ClassUtils.isPresent(packagePrefix + className, getClass().getClassLoader())) {
+			packagePrefix = "org.flywaydb.core.internal.database.";
 		}
-		return queries;
+		return ((org.flywaydb.core.internal.database.DatabaseType) Class.forName(packagePrefix + className)
+				.newInstance()).createParser(configuration, null, new ParsingContext());
 	}
 
 }

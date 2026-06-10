@@ -11,7 +11,7 @@
 				<param name="siteid" />
 				<param name="clearLink" />
 			</params>
-			<meta-data bindClass="java.util.Map.Entry">
+			<meta-data bindClass="java.util.Map$Entry">
 				<field name="key" type="longtext">
 					<label>name</label>
 				</field>
@@ -22,9 +22,9 @@
 			<linkpanel location="bottom" id="other">
 				<link target="${clearLink}" mode="intern">
 					<icon>delete</icon>
-					<label id="cache.statistics.clear" />
+					<label id="cache.clear" />
 					<permissions>
-						<permission ref="cache.statistics.clear" mode="set" />
+						<permission ref="cache.clear" mode="set" />
 					</permissions>
 				</link>
 			</linkpanel>

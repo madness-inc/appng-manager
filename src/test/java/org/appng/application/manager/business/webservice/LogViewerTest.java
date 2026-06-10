@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2017 the original author or authors.
+ * Copyright 2011-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.appng.application.manager.business;
+package org.appng.application.manager.business.webservice;
 
 import java.io.File;
 import java.net.URISyntaxException;
@@ -42,7 +42,7 @@ public class LogViewerTest extends LogViewer {
 		Mockito.when(permissionProcessor.hasPermission(PERM_LOG_VIEWER)).thenReturn(true);
 		byte[] processRequest = processRequest(null, null, environment, request);
 		String result = new String(processRequest);
-		Assert.assertEquals("\nlog4j.logger.org.hibernate = FATAL", result);
+		Assert.assertEquals("log4j.appender.appng.File = ${webapp.root}/appNG.log", result);
 	}
 
 	@Override

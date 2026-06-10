@@ -10,12 +10,8 @@
 			</permissions>
 			<params />
 			<meta-data bindClass="org.appng.api.model.Identifier">
-				<field name="id" type="int">
-					<sort />
-					<label>id</label>
-				</field>
 				<field name="name" type="text">
-					<sort />
+					<sort prio="0" order="asc" ignore-case="true"/>
 					<label>name</label>
 				</field>
 				<field name="description" type="text">
@@ -30,7 +26,7 @@
 				</field>
 			</meta-data>
 			<linkpanel id="actions" location="inline">
-				<link mode="intern" target="/applications&#63;form_action=deleteTemplate&#38;name=#{name}">
+				<link mode="intern" target="/applications&#63;act=deleteTemplate&#38;name=#{name}">
 					<label>delete</label>
 					<icon>delete</icon>
 					<confirmation id="template.delete.confirm" params="#{name}"></confirmation>

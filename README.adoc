@@ -1,0 +1,18 @@
+image::https://raw.githubusercontent.com/appNG/appng/appng-1.25.x/appng-logo.png[]
+:snapshot: 1.20.0-SNAPSHOT
+:stable: 1.19.3
+:docVersion: 1.20.x
+
+== Welcome to appNG Manager
+
+The appNG Manager is an appNG privileged application, providing a web-based interface to administer appNG and to access other appNG applications.
+
+=== User Guide
+
+The user guide can be found at https://appng.org/appng-manager/docs/{docVersion}/reference/html/appng-manager-userguide.html
+
+=== Issue tracker
+Issues are tracked in appNG's public https://appng.org/jira/browse/MGR[JIRA^] instance.
+
+=== Changelog
+The changelog can be found link:changelog.txt[here^].

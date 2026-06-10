@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2017 the original author or authors.
+ * Copyright 2011-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
  */
 package org.appng.application.manager.form;
 
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 
 import org.appng.api.model.Resource;
 import org.appng.api.model.ResourceType;
@@ -28,8 +28,6 @@ import org.appng.api.model.ResourceType;
  */
 public class ResourceForm {
 
-	public static final String ENCODING = "UTF-8";
-
 	private Integer id;
 	private String name;
 	private ResourceType type;
@@ -37,11 +35,7 @@ public class ResourceForm {
 
 	public ResourceForm(Resource resource) {
 		if (!ResourceType.JAR.equals(resource.getResourceType())) {
-			try {
-				this.content = new String(resource.getBytes(), ENCODING);
-			} catch (UnsupportedEncodingException e) {
-				e.printStackTrace();
-			}
+			this.content = new String(resource.getBytes(), StandardCharsets.UTF_8);
 		}
 		this.id = resource.getId();
 		this.name = resource.getName();

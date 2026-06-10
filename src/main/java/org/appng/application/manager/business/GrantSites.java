@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2017 the original author or authors.
+ * Copyright 2011-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,13 +31,9 @@ import org.appng.application.manager.form.GrantForm;
 import org.appng.application.manager.service.ServiceAware;
 import org.appng.core.domain.SiteApplication;
 import org.appng.xml.platform.Selection;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-@Lazy
 @Component
-@Scope("request")
 public class GrantSites extends ServiceAware implements ActionProvider<GrantForm>, DataProvider {
 
 	private static final String APPLICATION_ID = "applicationId";
@@ -48,8 +44,8 @@ public class GrantSites extends ServiceAware implements ActionProvider<GrantForm
 			Request request, FieldProcessor fieldProcessor) {
 		DataContainer dataContainer = new DataContainer(fieldProcessor);
 
-		Integer siteId = request.convert(options.getOptionValue(IDS, SITE_ID), Integer.class);
-		Integer applicationId = request.convert(options.getOptionValue(IDS, APPLICATION_ID), Integer.class);
+		Integer siteId = options.getInteger(IDS, SITE_ID);
+		Integer applicationId = options.getInteger(IDS, APPLICATION_ID);
 
 		SiteApplication siteApplication = getService().getSiteApplication(siteId, applicationId);
 
@@ -70,8 +66,8 @@ public class GrantSites extends ServiceAware implements ActionProvider<GrantForm
 	public void perform(Site site, Application application, Environment environment, Options options, Request request,
 			GrantForm grantForm, FieldProcessor fieldProcessor) {
 
-		Integer siteId = request.convert(options.getOptionValue(IDS, SITE_ID), Integer.class);
-		Integer applicationId = request.convert(options.getOptionValue(IDS, APPLICATION_ID), Integer.class);
+		Integer siteId = options.getInteger(IDS, SITE_ID);
+		Integer applicationId = options.getInteger(IDS, APPLICATION_ID);
 		Set<Integer> grantedSiteIds = grantForm.getGrantedSiteIds();
 		getService().grantSites(siteId, applicationId, grantedSiteIds);
 

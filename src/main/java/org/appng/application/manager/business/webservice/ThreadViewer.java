@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2017 the original author or authors.
+ * Copyright 2011-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.appng.application.manager.business;
+package org.appng.application.manager.business.webservice;
 
 import java.util.Map;
 
@@ -24,13 +24,9 @@ import org.appng.api.Webservice;
 import org.appng.api.model.Application;
 import org.appng.api.model.Site;
 import org.appng.api.model.Subject;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-@Lazy
 @Component
-@Scope("request")
 public class ThreadViewer implements Webservice {
 
 	private static final String PERM_PLATFORM_THREADS = "platform.threads";
@@ -62,8 +58,8 @@ public class ThreadViewer implements Webservice {
 				traceBuilder.append("interrupted: " + t.isInterrupted());
 				ClassLoader classLoader = t.getContextClassLoader();
 				if (null != classLoader) {
-					traceBuilder.append(", classloader: " + classLoader.getClass().getSimpleName() + "#"
-							+ classLoader.hashCode());
+					traceBuilder.append(
+							", classloader: " + classLoader.getClass().getSimpleName() + "#" + classLoader.hashCode());
 				}
 				traceBuilder.append(")");
 				traceBuilder.append(Constants.NEW_LINE);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2017 the original author or authors.
+ * Copyright 2011-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,25 +32,20 @@ import org.appng.api.model.Site;
 import org.appng.application.manager.service.ServiceAware;
 import org.appng.core.model.JarInfo;
 import org.appng.core.model.JarInfo.JarInfoBuilder;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 /**
  * A {@link DataProvider} providing information about the JAR-files used by a site/the platform.
  * 
  * @author Matthias Herlitzius
- * 
  */
 
-@Lazy
 @Component
-@Scope("request")
 public class Jars extends ServiceAware implements DataProvider {
 
 	public DataContainer getData(Site site, Application application, Environment environment, Options options,
 			Request request, FieldProcessor fp) {
-		Integer siteId = request.convert(options.getOptionValue(Sites.SITE, ID), Integer.class);
+		Integer siteId = options.getInteger(Sites.SITE, ID);
 		DataContainer data = new DataContainer(fp);
 		List<JarInfo> jars;
 		if (null == options.getOptionValue("tomcatJars", "show")) {
@@ -59,11 +54,7 @@ public class Jars extends ServiceAware implements DataProvider {
 			jars = new ArrayList<JarInfo>();
 			File baseFolder = new File(System.getProperty("catalina.base"), "lib");
 			File homeFolder = new File(System.getProperty("catalina.home"), "lib");
-			FilenameFilter jarFilter = new FilenameFilter() {
-				public boolean accept(File dir, String name) {
-					return name.endsWith(".jar");
-				}
-			};
+			FilenameFilter jarFilter = (dir, name) -> name.endsWith(".jar");
 			for (String jarfile : baseFolder.list(jarFilter)) {
 				jars.add(JarInfoBuilder.getJarInfo(new File(baseFolder, jarfile)));
 			}

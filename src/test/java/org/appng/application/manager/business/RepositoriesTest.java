@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2017 the original author or authors.
+ * Copyright 2011-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@ import org.appng.core.domain.RepositoryImpl;
 import org.appng.core.model.RepositoryCacheFactory;
 import org.appng.core.model.RepositoryMode;
 import org.appng.core.model.RepositoryType;
+import org.appng.testsupport.validation.WritingXmlValidator;
 import org.appng.testsupport.validation.XPathDifferenceHandler;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
@@ -36,6 +37,10 @@ import org.junit.runners.MethodSorters;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class RepositoriesTest extends AbstractTest {
+
+	static {
+		WritingXmlValidator.writeXml = false;
+	}
 
 	private static final String REPO_PATH = new File("target").toPath().toUri().toString();
 	private static final String REPO_EVENT = "repositoryEvent";
@@ -78,10 +83,10 @@ public class RepositoriesTest extends AbstractTest {
 		CallableDataSource siteDatasource = getDataSource("repository").withParam("repositoryid", "1")
 				.getCallableDataSource();
 		siteDatasource.perform("test");
-		
+
 		XPathDifferenceHandler differenceListener = new XPathDifferenceHandler(false);
+		differenceListener.ignoreDifference("/datasource[1]/data[1]/result[1]/field[3]/value[1]/text()[1]");
 		differenceListener.ignoreDifference("/datasource[1]/data[1]/result[1]/field[4]/value[1]/text()[1]");
-		differenceListener.ignoreDifference("/datasource[1]/data[1]/result[1]/field[5]/value[1]/text()[1]");
 		validate(siteDatasource.getDatasource(), differenceListener);
 	}
 
@@ -95,8 +100,8 @@ public class RepositoriesTest extends AbstractTest {
 		siteDatasource.perform("test");
 
 		XPathDifferenceHandler differenceListener = new XPathDifferenceHandler(false);
-		differenceListener.ignoreDifference("/datasource[1]/data[1]/resultset[1]/result[1]/field[6]/value[1]/text()[1]");
-		differenceListener.ignoreDifference("/datasource[1]/data[1]/resultset[1]/result[2]/field[6]/value[1]/text()[1]");
+		differenceListener.ignoreDifference("/datasource[1]/data[1]/resultset[1]/result[1]/field[5]/value[1]/text()[1]");
+		differenceListener.ignoreDifference("/datasource[1]/data[1]/resultset[1]/result[2]/field[5]/value[1]/text()[1]");
 		validate(siteDatasource.getDatasource(), differenceListener);
 	}
 
@@ -107,10 +112,10 @@ public class RepositoriesTest extends AbstractTest {
 
 		CallableAction callableAction = getAction(REPO_EVENT, "update").withParam("repositoryid", "1")
 				.withParam(FORM_ACTION, "update").getCallableAction(repoForm);
-		
+
 		XPathDifferenceHandler differenceListener = new XPathDifferenceHandler(false);
+		differenceListener.ignoreDifference("/action[1]/data[1]/result[1]/field[3]/value[1]/text()[1]");
 		differenceListener.ignoreDifference("/action[1]/data[1]/result[1]/field[4]/value[1]/text()[1]");
-		differenceListener.ignoreDifference("/action[1]/data[1]/result[1]/field[5]/value[1]/text()[1]");
 
 		FieldProcessor fieldProcessor = callableAction.perform();
 		validate(callableAction.getAction(), "-action", differenceListener);
@@ -145,5 +150,14 @@ public class RepositoriesTest extends AbstractTest {
 			// ignore
 		}
 		repoRepository.save(realRepository);
+	}
+
+	@Test
+	public void testPackages() throws Exception {
+		RepositoryCacheFactory.init(null, null, null, null, false);
+		CallableDataSource packages = getDataSource("packages").withParam("repositoryid", "1")
+				.withParam("packageFilter", "*").getCallableDataSource();
+		packages.perform("");
+		validate(packages.getDatasource());
 	}
 }

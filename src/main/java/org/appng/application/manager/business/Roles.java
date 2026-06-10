@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2017 the original author or authors.
+ * Copyright 2011-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,24 +29,19 @@ import org.appng.application.manager.MessageConstants;
 import org.appng.application.manager.form.RoleForm;
 import org.appng.application.manager.service.Service;
 import org.appng.application.manager.service.ServiceAware;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Provides CRUD-operations for a {@link org.appng.core.domain.RoleImpl}.
  * 
  * @author Matthias Müller
- * 
  */
 
-@Lazy
+@Slf4j
 @Component
-@Scope("request")
 public class Roles extends ServiceAware implements DataProvider, ActionProvider<RoleForm> {
-	private static final Logger log = LoggerFactory.getLogger(Roles.class);
 
 	public void perform(Site site, Application application, Environment environment, Options options, Request request,
 			RoleForm roleForm, FieldProcessor fp) {
@@ -54,17 +49,17 @@ public class Roles extends ServiceAware implements DataProvider, ActionProvider<
 
 		String okMessage = null;
 		Service service = getService();
-		Integer applicationroleId = request.convert(options.getOptionValue(ID, ID), Integer.class);
+		Integer applicationroleId = options.getInteger(ID, ID);
 
 		try {
 			if (ACTION_CREATE.equals(action)) {
-				Integer applicationId = request.convert(options.getOptionValue(APPLICATION, ID), Integer.class);
-				service.createRole(roleForm, applicationId, fp);
+				Integer applicationId = options.getInteger(APPLICATION, ID);
+				service.createRole(request, roleForm, applicationId, fp);
 				okMessage = MessageConstants.ROLE_CREATED;
 			} else if (ACTION_UPDATE.equals(action)) {
-				Integer roleId = request.convert(options.getOptionValue(ID, ID), Integer.class);
+				Integer roleId = options.getInteger(ID, ID);
 				roleForm.getRole().setId(roleId);
-				service.updateRole(roleForm, fp);
+				service.updateRole(request, roleForm, fp);
 				okMessage = MessageConstants.ROLE_UPDATED;
 			} else if (ACTION_DELETE.equals(action)) {
 				service.deleteRole(applicationroleId);
@@ -81,8 +76,8 @@ public class Roles extends ServiceAware implements DataProvider, ActionProvider<
 	public DataContainer getData(Site site, Application application, Environment environment, Options options,
 			Request request, FieldProcessor fp) {
 		Service service = getService();
-		Integer applicationRoleId = request.convert(options.getOptionValue(ID, ID), Integer.class);
-		Integer applicationId = request.convert(options.getOptionValue(APPLICATION, ID), Integer.class);
+		Integer applicationRoleId = options.getInteger(ID, ID);
+		Integer applicationId = options.getInteger(APPLICATION, ID);
 		DataContainer data = null;
 		if (null == applicationRoleId && ACTION_CREATE.equals(getAction(options))) {
 			data = service.getNewRole(fp, applicationId);

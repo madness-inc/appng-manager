@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<datasource xmlns="http://www.appng.org/schema/platform" id="databaseConnections">
+	<config>
+		<title id="connections">Database connections</title>
+		<params>
+			<param name="siteid" />
+			<param name="createLink" />
+			<param name="editLink" />
+			<param name="deleteLink" />
+			<param name="testLink" />
+			<param name="resetLink" />
+			<param name="linkTab" />
+			<param name="editTab" />
+		</params>
+		<meta-data binding="item" bindClass="org.appng.application.manager.form.DatabaseConnectionForm">
+			<field name="type" type="text" binding="item.type">
+				<label id="type">Type</label>
+			</field>
+			<field name="name" type="text" binding="item.name">
+				<label id="name">Name</label>
+			</field>
+			<field name="jdbcUrl" type="text" binding="item.jdbcUrl">
+				<label id="jdbcUrl">JDBC-URL</label>
+			</field>
+			<field name="userName" type="text" binding="item.userName">
+				<label id="userName">User-Name</label>
+			</field>
+			<field name="databaseSize" type="decimal" format="#.##" binding="item.databaseSize">
+				<label id="sizeMB">Size (MB)</label>
+			</field>
+			<field name="version" type="text" binding="version">
+				<label id="version">Version</label>
+			</field>
+			<field name="productName" type="text" binding="item.productName">
+				<label id="productName">Product Name</label>
+			</field>
+			<field name="productVersion" type="text" binding="item.productVersion">
+				<label id="productVersion">Product Version</label>
+			</field>
+			<field name="state" type="image" readonly="true" binding="state">
+				<label id="status">Status</label>
+				<icon condition="${current.item.active and not current.pendingMigrations}">led_green</icon>
+				<icon condition="${current.item.active and current.pendingMigrations}">led_red</icon>
+				<icon condition="${not current.item.active}">led_orange</icon>
+			</field>
+			<field name="active" type="image" binding="item.active">
+				<label id="active">Active</label>
+				<icon condition="${current.item.active}">led_green</icon>
+				<icon condition="${not current.item.active}">led_red</icon>
+			</field>
+			<field name="actions" type="linkpanel" binding="item.actions">
+				<label id="actions">Actions</label>
+			</field>
+		</meta-data>
+		<linkpanel id="create" location="both" />
+		<linkpanel id="actions" location="inline">
+			<link id="actions[1]" target="${current.item.id}" mode="intern" default="true">
+				<label id="edit">Edit</label>
+				<icon>edit</icon>
+			</link>
+		</linkpanel>
+	</config>
+	<data>
+		<resultset chunk="0" chunkname="databaseConnections" chunksize="10" nextchunk="0" previouschunk="0"
+			firstchunk="0" lastchunk="0" hits="1">
+			<result>
+				<field name="type" type="text">
+					<value>HSQL</value>
+				</field>
+				<field name="name" type="text">
+					<value>appNG HSQL</value>
+				</field>
+				<field name="jdbcUrl" type="text">
+					<value>jdbc:hsqldb:hsql://localhost:9001/hsql-testdb</value>
+				</field>
+				<field name="userName" type="text">
+					<value>sa</value>
+				</field>
+				<field name="databaseSize" type="decimal">
+					<value></value>
+				</field>
+				<field name="version" type="text">
+					<value>UNKNOWN</value>
+				</field>
+				<field name="productName" type="text">
+					<value>HSQL Database Engine</value>
+				</field>
+				<field name="productVersion" type="text">
+					<value>2.5.0</value>
+				</field>
+				<field name="state" type="image">
+					<value>UNKNOWN</value>
+					<icon type="class">led_red</icon>
+				</field>
+				<field name="active" type="image">
+					<value>true</value>
+					<icon type="class">led_green</icon>
+				</field>
+				<linkpanel id="actions" location="inline">
+					<link id="actions[1]" target="1" mode="intern" default="true">
+						<label id="edit">Edit</label>
+						<icon>edit</icon>
+					</link>
+				</linkpanel>
+			</result>
+		</resultset>
+	</data>
+</datasource>

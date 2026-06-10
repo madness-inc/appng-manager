@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2017 the original author or authors.
+ * Copyright 2011-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.appng.application.manager.business;
+package org.appng.application.manager.business.webservice;
 
 import java.io.File;
 import java.io.IOException;
@@ -30,7 +30,6 @@ import org.appng.api.model.Application;
 import org.appng.api.model.Site;
 import org.appng.api.model.Subject;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 /**
@@ -43,19 +42,12 @@ import org.springframework.stereotype.Component;
  * @author Matthias Müller
  */
 
-@Lazy
 @Component
-@org.springframework.context.annotation.Scope("request")
 public class LogViewer implements Webservice {
 
-	private static final String LOG_LOCATION = "WEB-INF/log/";
 	protected static final String PERM_LOG_VIEWER = "platform.logfile";
-
-	@Value("${platform." + Platform.Property.PLATFORM_ROOT_PATH + "}")
-	private String rootPath;
-
-	@Value("${platform." + Platform.Property.LOGFILE + "}")
-	private String logfile;
+	private @Value("${loggingFile:WEB-INF/log/appNG.log}") String logPath;
+	private @Value("${platform." + Platform.Property.PLATFORM_ROOT_PATH + "}") String rootPath;
 
 	public byte[] processRequest(Site site, Application application, Environment environment, Request request)
 			throws BusinessException {
@@ -65,7 +57,6 @@ public class LogViewer implements Webservice {
 		if (subject != null && subject.isAuthenticated()
 				&& request.getPermissionProcessor().hasPermission(PERM_LOG_VIEWER)) {
 			File logFile = getLogfile();
-
 			int maxLines = 1000;
 			String parameter = request.getParameter("lines");
 			String find = request.getParameter("find");
@@ -85,9 +76,7 @@ public class LogViewer implements Webservice {
 						}
 					}
 				}
-			} catch (
-
-			IOException e) {
+			} catch (IOException e) {
 				throw new BusinessException(e);
 			}
 		}
@@ -96,7 +85,7 @@ public class LogViewer implements Webservice {
 	}
 
 	File getLogfile() {
-		return new File(rootPath, LOG_LOCATION + logfile);
+		return new File(rootPath, logPath);
 	}
 
 	public String getContentType() {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2017 the original author or authors.
+ * Copyright 2011-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,26 +31,22 @@ import org.appng.application.manager.form.RepositoryForm;
 import org.appng.application.manager.service.Service;
 import org.appng.application.manager.service.ServiceAware;
 import org.appng.forms.FormUpload;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Provides CRUD-operations for a {@link org.appng.core.domain.RepositoryImpl}.
  * 
  * @author Matthias Herlitzius
- * 
  */
 
-@Lazy
+@Slf4j
 @Component
-@Scope("request")
 public class Repositories extends ServiceAware implements DataProvider, ActionProvider<RepositoryForm> {
 
 	private static final String UPLOAD = "upload";
-	private static final Logger log = LoggerFactory.getLogger(Repositories.class);
+
 	private static final String ACTION_UPLOAD_ARCHIVE = "uploadArchive";
 	public static final String REPOSITORY = "repository";
 
@@ -60,31 +56,31 @@ public class Repositories extends ServiceAware implements DataProvider, ActionPr
 		String errorMessage = null;
 		String okMessage = null;
 		Service service = getService();
-		Integer repositoryId = request.convert(options.getOptionValue(REPOSITORY, ID), Integer.class);
+		Integer repositoryId = options.getInteger(REPOSITORY, ID);
 		String archiveName = null;
 		try {
 			if (ACTION_CREATE.equals(action)) {
 				errorMessage = MessageConstants.REPOSITORY_CREATE_ERROR;
-				service.createRepository(repositoryForm.getRepository(), fp);
+				service.createRepository(request, repositoryForm.getRepository(), fp);
 				okMessage = MessageConstants.REPOSITORY_CREATED;
 			} else if (ACTION_UPDATE.equals(action)) {
 				repositoryForm.getRepository().setId(repositoryId);
 				errorMessage = MessageConstants.REPOSITORY_UPDATE_ERROR;
-				service.updateRepository(repositoryForm, fp);
+				service.updateRepository(request, repositoryForm, fp);
 				okMessage = MessageConstants.REPOSITORY_UPDATED;
 			} else if (ACTION_DELETE.equals(action)) {
 				errorMessage = MessageConstants.REPOSITORY_DELETE_ERROR;
-				service.deleteRepository(repositoryId, fp);
+				service.deleteRepository(request, repositoryId, fp);
 				okMessage = MessageConstants.REPOSITORY_DELETED;
 			} else if (ACTION_RELOAD.equals(action)) {
 				errorMessage = MessageConstants.REPOSITORY_RELOAD_ERROR;
-				service.reloadRepository(repositoryId, fp);
+				service.reloadRepository(request, repositoryId, fp);
 				okMessage = MessageConstants.REPOSITORY_RELOADED;
 			} else if (ACTION_UPLOAD_ARCHIVE.equals(action)) {
 				errorMessage = MessageConstants.REPOSITORY_ARCHIVE_UPLOAD_ERROR;
 				FormUpload archive = ((PackageUploadForm) repositoryForm).getArchive();
 				archiveName = archive.getOriginalFilename();
-				service.addArchiveToRepository(repositoryId, archive, fp);
+				service.addArchiveToRepository(request, repositoryId, archive, fp);
 				okMessage = MessageConstants.REPOSITORY_ARCHIVE_UPLOADED;
 			}
 			String message = request.getMessage(okMessage, repositoryId, archiveName);
@@ -99,17 +95,17 @@ public class Repositories extends ServiceAware implements DataProvider, ActionPr
 	public DataContainer getData(Site site, Application application, Environment environment, Options options,
 			Request request, FieldProcessor fp) {
 		Service service = getService();
-		Integer repositoryId = request.convert(options.getOptionValue(REPOSITORY, ID), Integer.class);
+		Integer repositoryId = options.getInteger(REPOSITORY, ID);
 		DataContainer data = null;
 		if (null == repositoryId && ACTION_CREATE.equals(getAction(options))) {
-			data = service.getNewRepository(fp);
+			data = service.getNewRepository(request, fp);
 		} else if (UPLOAD.equals(options.getOptionValue(REPOSITORY, MODE))) {
 			data = new DataContainer(fp);
 			PackageUploadForm packageUploadForm = new PackageUploadForm();
 			packageUploadForm.setRepository(service.getRepository(repositoryId));
 			data.setItem(packageUploadForm);
 		} else {
-			data = service.searchRepositories(fp, repositoryId);
+			data = service.searchRepositories(request, fp, repositoryId);
 		}
 		return data;
 	}

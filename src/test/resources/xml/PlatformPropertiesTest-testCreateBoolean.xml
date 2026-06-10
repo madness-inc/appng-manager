@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<datasource xmlns="http://www.appng.org/schema/platform" id="property">
+	<config>
+		<title id="property">property</title>
+		<params>
+			<param name="id">platform.booleanProp</param>
+		</params>
+		<meta-data binding="property" bindClass="org.appng.application.manager.form.PropertyForm">
+			<field name="type" type="text" hidden="true" binding="property.type" />
+			<field name="value" type="checkbox" binding="property.value">
+				<label id="value">booleanProp</label>
+			</field>
+			<field name="defaultString" type="text" readonly="true" binding="property.defaultString">
+				<label id="defaultvalue">Default-Value</label>
+			</field>
+			<field name="description" type="longtext" readonly="true" binding="property.description">
+				<label id="description">Description</label>
+			</field>
+		</meta-data>
+	</config>
+	<data>
+		<result>
+			<field name="type" type="text">
+				<value>BOOLEAN</value>
+			</field>
+			<field name="value" type="checkbox">
+				<value>true</value>
+			</field>
+			<field name="defaultString" type="text">
+				<value>true</value>
+			</field>
+			<field name="description" type="longtext">
+				<value>this is bool, man!</value>
+			</field>
+		</result>
+	</data>
+</datasource>

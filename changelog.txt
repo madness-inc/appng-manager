@@ -1,0 +1,188 @@
+Release Notes - appNG Manager - Version 1.20.0 (2023-03-31)
+-----------------------------------------------------------
+** Bug
+    * [MGR-137] - Avoid possible NPE when showing sessions
+    * [MGR-143] - Condition for displaying sessions is wrong
+    * [MGR-144] - Avoid showing an error message when no password is set for LDAP admin
+    * [MGR-149] - Can not delete an inactive site
+
+** Feature
+    * [MGR-136] - Support Log4j2
+    * [MGR-146] - Improvements in working with database connections
+    * [MGR-147] - Improve status icons in sites overview
+    * [MGR-148] - Show OK Message only if site actually has been reloaded
+
+** Improvement
+    * [MGR-138] - Related manager changes for hostname alias support (APPNG-2442)
+    * [MGR-142] - Make filtering sites and users work like every other filter
+
+** Task
+    * [MGR-135] - Support Flyway 8
+
+Release Notes - appNG Manager - Version 1.19.3 (2022-10-07)
+-----------------------------------------------------------
+** Bug
+    * [MGR-143] - Condition for displaying sessions is wrong
+    * [MGR-144] - Avoid showing an error message when no password is set for LDAP admin
+
+** Improvement
+    * [MGR-142] - Make filtering sites and users work like every other filter
+
+Release Notes - appNG Manager - Version 1.19.2 (2022-07-27)
+-----------------------------------------------------------
+** Bug
+    * [MGR-137] - Avoid possible NPE when showing sessions
+    * [MGR-139] - Reloading the template does not trigger a ReloadTemplateEvent
+    * [MGR-140] - Editing an inactive site leads to an ProcessingException
+** Task
+    * [MGR-141] - Upgrade version for maven-gpg-plugin
+
+Release Notes - appNG Manager - Version 1.19.1 (2022-02-08)
+-----------------------------------------------------------
+* [MGR-133] - Include-condition for actions "install" and "reload" is wrong
+* [MGR-134] - Update license header
+* [MGR-135] - Support Flyway 8
+
+Release Notes - appNG Manager - Version 1.19.0 (2022-01-13)
+-----------------------------------------------------------
+* [MGR-126] - System -> Environment -> JVM Arguments does not show multi-valued arguments
+* [MGR-128] - Cache-Overview: Avoid retrieving whole Cache
+* [MGR-129] - Allow clearing Cache also from Cache-Statistics
+* [MGR-132] - Avoid possible NPE while iterating over cache elements
+* [MGR-127] - Create an action to test sending e-mails
+* [MGR-131] - Add email to user's overview, remove language
+* [MGR-130] - Enhancements for site-filter
+
+Release Notes - appNG Manager - Version 1.18.1 (2021-10-13)
+-----------------------------------------------------------
+* [MGR-125] - LDAP Settings is missing "ldapUserBaseDn"
+
+Release Notes - appNG Manager - Version 1.18.0 (2021-10-01)
+-----------------------------------------------------------
+* [MGR-106] - Fix message shown when appNG Version of package is newer
+* [MGR-107] - SqlExecutor does not work with MariaDB
+* [MGR-108] - Repository packages do not show installed version
+* [MGR-116] - Names of nested bind classes
+* [MGR-117] - Include-condition for action="install" is wrong on page repositories
+* [MGR-118] - Exception must be logged when installing packages fails
+* [MGR-119] - RepositoryService#getPackages and #searchPackageVersions must return non-null values
+* [MGR-86] - Provide dedicated actions for starting and stopping sites
+* [MGR-111] - For the appNG Root Connection, all fields must not be writable
+* [MGR-113] - Show a message when LDAP is disabled
+* [MGR-114] - Allow managing node specific properties
+* [MGR-115] - Avoid loading all sessions from Tomcat's Manager
+* [MGR-121] - Support reloading only the template for a site, not the applications
+* [MGR-122] - Add a confirmation when reloading a site
+* [MGR-123] - Limit the number of filterable/sortable cache elements
+* [MGR-104] - Show a message for MigrationStatus.DB_NOT_MIGRATED
+* [MGR-120] - Avoid overloading the form_action post parameter as a get parameter
+* [MGR-110] - Upgrade to Flyway 7
+* [MGR-112] - Update license headers
+
+Release Notes - appNG Manager - Version 1.17.2 (2021-10-20)
+-----------------------------------------------------------
+* [MGR-107] - SqlExecutor does not work with MariaDB
+
+Release Notes - appNG Manager - Version 1.17.0 (2020-04-06)
+-----------------------------------------------------------
+* [MGR-102] - Provide an overview of LDAP users
+* [MGR-101] - Release of 1.17.0
+* [MGR-100] - Wrong GMT offset for timezones when editing users
+* [MGR-99] - Fix label for status of database connections
+* [MGR-97] - Remove some code smells
+* [MGR-96] - Properly close Flyway Database in SqlExecutor
+* [MGR-95] - Update documentation of caching properties
+* [MGR-94] - Improve management of users
+* [MGR-92] - Update license headers to 2020
+* [MGR-91] - Avoid lazy request scoped beans in org.appng.application.manager.business
+* [MGR-90] - Move Cache management to separate tab, remove action "Clear cache statistics"
+* [MGR-89] - Support type-safe properties
+* [MGR-88] - Use Flyway 5.2.4
+* [MGR-74] - Rework displaying user sessions
+* [MGR-62] - The active value for a multilined property is not being displayed
+
+Release Notes - appNG Manager - Version 1.16.0 (2019-11-25)
+-----------------------------------------------------------
+[MGR-87] - Release of 1.16.0
+[MGR-85] - Format error in platform event containing the size of appNG's root database
+[MGR-83] - Improve overview and details for database connections
+[MGR-82] - When reloading a site, forceForward="true" should be used
+[MGR-81] - Replace username selection for filtering platform events with a textfield, when a threshold is exceeded
+[MGR-80] - For a single role, show a readonly list of all groups and users containing it
+[MGR-79] - Default value is set when creating/editing multilined properties
+[MGR-71] - Possible NPE in PlatformEvents
+
+Release Notes - appNG Manager - Version 1.15.0 (2019-08-01)
+-----------------------------------------------------------
+* [MGR-78] - Release of 1.15.0
+* [MGR-77] - Support Filtering Users by group
+* [MGR-76] - Support filtering sites by name and domain
+* [MGR-75] - Use org.appng.api.support.SelectionBuilder
+* [MGR-70] - Use appNG 1.19.0
+* [MGR-73] - Move to 1.15.x branch
+* [MGR-67] - Add possibility to search groups by name, show users that belong to a group
+* [MGR-66] - UI Cleanup: Remove IDs from overview, fix/apply default sorting
+* [MGR-65] - Logviewer must support a different location for appNG.log
+* [MGR-58] - Support searching/filtering package name of a repository
+
+Release Notes - appNG Manager - Version 1.14.0 (2019-01-03)
+-----------------------------------------------------------
+* [MGR-61] - Update license header to 2019
+* [MGR-60] - Release of 1.14..0
+* [MGR-59] - Bump Version to 1.14.0, move to branch appng-manager-1.14.x
+* [MGR-56] - Sort sites and users by name by default
+* [MGR-55] - It should be possible to filter for sessions with an active user
+* [MGR-54] - Make ManagerService and RepositoryService a singleton
+* [MGR-53] - Writing and reporting of database related platform events
+* [MGR-52] - Filtering events for a username does not work if it starts/ends with a space
+* [MGR-51] - Installing latest stable/snapshot directly from package overview fails
+* [MGR-50] - Updating admin group causes NPE
+
+Release Notes - appNG Manager - Version 1.13.1 (2018-05-11)
+-----------------------------------------------------------
+* [MGR-48] - Release version 1.13.1
+* [MGR-47] - Align TOC of userguide at the left
+* [MGR-46] - Filter platform events by application
+* [MGR-45] - Provide a changelog.txt
+* [MGR-44] - Add section about platform events to user manual
+
+Release Notes - appNG Manager - Version 1.13.0 (2018-03-29)
+-----------------------------------------------------------
+* [MGR-42] - Missing labels/ use uppercase
+* [MGR-40] - Release 1.13.0
+* [MGR-41] - Merge Changes from 1.12.x Branch
+* [MGR-39] - Error when sorting sites with startup-time
+* [MGR-38] - Possible NPE when filtering for user agent
+* [MGR-37] - Move TOC of documentation to the left
+* [MGR-36] - Remove call of deprecated CoreService.deleteSite()
+* [MGR-35] - Use static utility methods from o.a.a.m.Messaging
+* [MGR-34] - Use @Slf4j
+* [MGR-33] - Move Webservices to own package
+* [MGR-32] - Provide a link to the user guide in README
+* [MGR-31] - Show database sizes and schema migration information for databaseconnection
+* [MGR-29] - Add supportReloadFile to appNG Manager documentation
+* [MGR-28] - Add the appNG version to the list of package versions
+* [MGR-27] - Fix JavaDoc Warnings
+* [MGR-26] - Provide a DataSource to show and filter platform events
+* [MGR-25] - Sorting properties fails with an error
+* [MGR-24] - Wrong tab selected after toggling the application state on a site
+* [MGR-23] - Typo in confirmation message when removing an application from a site
+* [MGR-21] - Update license header to 2018
+* [MGR-20] - Minor update to messages.properties
+* [MGR-19] - Prepare 1.13.x development branch
+* [MGR-16] - Replace "Reload platform..." message with "Reload site"
+* [MGR-8]  - add "contributing" file
+
+Release Notes - appNG Manager - Version 1.12.4 (2017-11-15)
+-----------------------------------------------------------
+* [MGR-14] - Release version 1.12.4
+* [MGR-13] - Documentation of platform and site properties
+* [MGR-12] - The Cluster Status should also include the current cluster node
+* [MGR-11] - Rename core application --> privileged
+* [MGR-9]  - Use Flyway for SQL Parsing, cleanup pom.xml
+* [MGR-3]  - Editing group "Administrators" should be suppressed
+
+Release Notes - appNG Manager - Version 1.12.3 (2017-07-04)
+-----------------------------------------------------------
+* [MGR-2]  - Build Release 1.12.3 and deploy to Maven Central
+* [MGR-5]  - add license header

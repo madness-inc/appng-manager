@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2017 the original author or authors.
+ * Copyright 2011-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,6 +30,8 @@ import org.appng.core.domain.PackageArchiveImpl;
 import org.appng.core.model.PackageArchive;
 import org.appng.core.model.Repository;
 import org.appng.core.model.RepositoryUtils;
+import org.appng.core.xml.repository.GetCertificationRequest;
+import org.appng.core.xml.repository.GetCertificationResponse;
 import org.appng.core.xml.repository.GetPackageRequest;
 import org.appng.core.xml.repository.GetPackageResponse;
 import org.appng.core.xml.repository.GetPackageVersionsRequest;
@@ -42,7 +44,6 @@ import org.appng.core.xml.repository.Packages;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Scope;
 import org.springframework.ws.server.endpoint.annotation.Endpoint;
 import org.springframework.ws.server.endpoint.annotation.PayloadRoot;
 import org.springframework.ws.server.endpoint.annotation.RequestPayload;
@@ -50,27 +51,28 @@ import org.springframework.ws.server.endpoint.annotation.ResponsePayload;
 
 /**
  * 
- * A {@link SoapService} allowing remote listing and transferring of the available {@link Package}s from a
- * {@link Repository}.
+ * A {@link SoapService} allowing remote listing and transferring of the
+ * available {@link Package}s from a {@link Repository}.
  * 
  * @author Matthias Herlitzius
+ * @author Matthias Müller
  * 
  */
 @Endpoint
-@Scope("request")
-@org.springframework.stereotype.Service
 public class RepositoryService implements SoapService {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(RepositoryService.class);
 	private static final String SCHEMA_LOCATION = "appng-repository.xsd";
 	private static final String REPOSITORY = "repository";
 	private static final String NAMESPACE = "http://www.appng.org/schema/repository";
+	private static final String GET_CERTIFICATION = "getCertificationRequest";
 	private static final String GET_PACKAGES = "getPackagesRequest";
 	private static final String GET_PACKAGE_VERSIONS = "getPackageVersionsRequest";
 	private static final String GET_PACKAGE = "getPackageRequest";
 
 	@Autowired
 	private Service service;
+	private Environment environment;
 
 	@PayloadRoot(localPart = GET_PACKAGES, namespace = NAMESPACE)
 	public @ResponsePayload GetPackagesResponse getPackages(@RequestPayload GetPackagesRequest request)
@@ -79,11 +81,12 @@ public class RepositoryService implements SoapService {
 		try {
 			GetPackagesResponse response = new GetPackagesResponse();
 			FieldProcessor fp = new FieldProcessorImpl(REPOSITORY);
-			Packages packages = service.searchPackages(fp, repositoryName, request.getDigest());
+			Packages packages = service.searchPackages(environment, fp, repositoryName, request.getDigest(),
+					request.getPackageName());
 			response.setPackages(packages);
 			return response;
 		} catch (BusinessException e) {
-			LOGGER.error("error while retrieving packages from repository: " + repositoryName, e);
+			LOGGER.error(String.format("error while retrieving packages from repository:  %s", repositoryName), e);
 			throw e;
 		}
 	}
@@ -96,13 +99,13 @@ public class RepositoryService implements SoapService {
 		try {
 			GetPackageVersionsResponse response = new GetPackageVersionsResponse();
 			FieldProcessor fp = new FieldProcessorImpl(REPOSITORY);
-			PackageVersions packageVersions = service.searchPackageVersions(fp, repositoryName, packageName,
-					request.getDigest());
+			PackageVersions packageVersions = service.searchPackageVersions(environment, fp, repositoryName,
+					packageName, request.getDigest());
 			response.setPackageVersions(packageVersions);
 			return response;
 		} catch (BusinessException e) {
-			LOGGER.error("error while retrieving package versions from repository: " + repositoryName + ", package: "
-					+ packageName, e);
+			LOGGER.error(String.format("error while retrieving package versions from repository: %s, package: %s",
+					repositoryName, packageName), e);
 			throw e;
 		}
 	}
@@ -115,8 +118,8 @@ public class RepositoryService implements SoapService {
 		String version = request.getPackageVersion();
 		String timestamp = request.getPackageTimestamp();
 		try {
-			PackageArchive archive = service.getPackageArchive(repositoryName, packageName, version, timestamp,
-					request.getDigest());
+			PackageArchive archive = service.getPackageArchive(environment, repositoryName, packageName, version,
+					timestamp, request.getDigest());
 			try {
 				if (StringUtils.isBlank(timestamp)) {
 					timestamp = archive.getPackageInfo().getTimestamp();
@@ -130,10 +133,18 @@ public class RepositoryService implements SoapService {
 				throw new BusinessException("error getting bytes from " + archive, e);
 			}
 		} catch (BusinessException e) {
-			LOGGER.error("error while retrieving package archive from remote repository: " + repositoryName
-					+ ", package: " + packageName + ", version: " + version + ", timestamp: " + timestamp, e);
+			LOGGER.error(String.format(
+					"error while retrieving package archive from remote repository: %s, package: %s, version: %s, timestamp: %s",
+					repositoryName, packageName, version, timestamp), e);
 			throw e;
 		}
+	}
+
+	@PayloadRoot(localPart = GET_CERTIFICATION, namespace = NAMESPACE)
+	public @ResponsePayload GetCertificationResponse getCertification(@RequestPayload GetCertificationRequest request)
+			throws BusinessException {
+		// just a dummy until MGR-43 is implemented
+		return new GetCertificationResponse();
 	}
 
 	public String getContextPath() {
@@ -151,6 +162,7 @@ public class RepositoryService implements SoapService {
 	}
 
 	public void setEnvironment(Environment environment) {
+		this.environment = environment;
 	}
 
 	public Service getService() {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2017 the original author or authors.
+ * Copyright 2011-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,25 +32,19 @@ import org.appng.application.manager.MessageConstants;
 import org.appng.application.manager.form.ResourceForm;
 import org.appng.application.manager.service.Service;
 import org.appng.application.manager.service.ServiceAware;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * ApplicationResources action class reads all resources of a application
  * 
  * @author Matthias Herlitzius
- * 
  */
 
-@Lazy
+@Slf4j
 @Component
-@Scope("request")
 public class Resources extends ServiceAware implements ActionProvider<ResourceForm>, DataProvider {
-
-	private static final Logger log = LoggerFactory.getLogger(Resources.class);
 
 	private static final String TYPE = "type";
 	private static final String RESOURCE = "resource";
@@ -60,17 +54,17 @@ public class Resources extends ServiceAware implements ActionProvider<ResourceFo
 		String action = getAction(options);
 		String errorMessage = null;
 		Service service = getService();
-		Integer applicationId = request.convert(options.getOptionValue(APPLICATION, ID), Integer.class);
-		Integer resourceId = request.convert(options.getOptionValue(RESOURCE, ID), Integer.class);
+		Integer applicationId = options.getInteger(APPLICATION, ID);
+		Integer resourceId = options.getInteger(RESOURCE, ID);
 		String resourceName = null;
 		try {
 			if (ACTION_DELETE.equals(action)) {
 				errorMessage = MessageConstants.RESOURCE_DELETE_ERROR;
-				resourceName = service.deleteResource(applicationId, resourceId, fp);
+				resourceName = service.deleteResource(request, applicationId, resourceId, fp);
 
 			} else if (ACTION_UPDATE.equals(action)) {
 				form.setId(resourceId);
-				resourceName = service.updateResource(site, applicationId, form, fp);
+				resourceName = service.updateResource(request, site, applicationId, form, fp);
 			}
 
 		} catch (BusinessException ex) {
@@ -83,17 +77,17 @@ public class Resources extends ServiceAware implements ActionProvider<ResourceFo
 	public DataContainer getData(Site site, Application application, Environment environment, Options options,
 			Request request, FieldProcessor fp) {
 		Service service = getService();
-		Integer applicationId = request.convert(options.getOptionValue(APPLICATION, ID), Integer.class);
+		Integer applicationId = options.getInteger(APPLICATION, ID);
 
 		String resourceType = options.getOptionValue(RESOURCE, TYPE);
-		Integer resourceId = request.convert(options.getOptionValue(RESOURCE, ID), Integer.class);
+		Integer resourceId = options.getInteger(RESOURCE, ID);
 		ResourceType type = null;
 		if (StringUtils.isNotBlank(resourceType)) {
 			type = ResourceType.valueOf(resourceType);
 		}
 
 		try {
-			return service.searchResources(site, fp, type, resourceId, applicationId);
+			return service.searchResources(request, site, fp, type, resourceId, applicationId);
 		} catch (BusinessException e) {
 			throw new ApplicationException("error while loading resources for application", e);
 		}

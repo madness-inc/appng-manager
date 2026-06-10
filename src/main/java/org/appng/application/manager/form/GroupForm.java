@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2017 the original author or authors.
+ * Copyright 2011-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,16 +22,22 @@ import javax.validation.Valid;
 
 import org.appng.core.domain.GroupImpl;
 
+import lombok.Getter;
+import lombok.Setter;
+
 /**
  * Bindclass used for creating/updating a {@link GroupImpl}.
  * 
  * @author Matthias Müller
  * 
  */
+@Getter
+@Setter
 public class GroupForm {
+
 	private GroupImpl group;
 
-	private List<Integer> roleIds = new ArrayList<Integer>();
+	private List<Integer> roleIds = new ArrayList<>();
 
 	public GroupForm() {
 		this(new GroupImpl());
@@ -44,18 +50,6 @@ public class GroupForm {
 	@Valid
 	public GroupImpl getGroup() {
 		return group;
-	}
-
-	public void setGroup(GroupImpl group) {
-		this.group = group;
-	}
-
-	public List<Integer> getRoleIds() {
-		return roleIds;
-	}
-
-	public void setRoleIds(List<Integer> roleIds) {
-		this.roleIds = roleIds;
 	}
 
 }

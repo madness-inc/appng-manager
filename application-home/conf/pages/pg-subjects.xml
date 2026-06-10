@@ -15,11 +15,16 @@
 					<url-param name="id" />
 				</url-params>
 				<get-params>
-					<get-param name="form_action" />
+					<get-param name="act" />
 					<get-param name="userid" />
 					<get-param name="groupid" />
 					<get-param name="f_type" />
 					<get-param name="f_name" />
+					<get-param name="f_gn" />
+					<get-param name="f_gid" />
+					<get-param name="f_lckd" />
+					<get-param name="f_eml" />
+					<get-param name="f_rlnme" />
 				</get-params>
 				<post-params>
 					<post-param name="form_action" />
@@ -27,6 +32,7 @@
 			</url-schema>
 		</config>
 		<structure>
+			<!-- subjects -->
 			<section>
 				<!-- create -->
 				<element passive="true">
@@ -41,7 +47,7 @@
 				<element passive="true">
 					<action eventId="subjectEvent" id="update" onSuccess="/users">
 						<params>
-							<param name="userid">${id}</param>
+							<param name="userId">${id}</param>
 							<param name="form_action">${form_action}</param>
 						</params>
 						<condition expression="${action eq 'update' and entity eq 'user'}" />
@@ -51,12 +57,12 @@
 				<element>
 					<datasource id="users">
 						<params>
-							<param name="userid">${id}</param>
+							<param name="userId">${id}</param>
 						</params>
 					</datasource>
 				</element>
 			</section>
-
+			<!-- groups -->
 			<section>
 				<!-- create -->
 				<element passive="true">
@@ -82,29 +88,36 @@
 					<datasource id="groups">
 						<params>
 							<param name="groupid">${id}</param>
+							<param name="groupName">${f_gn}</param>
 						</params>
 					</datasource>
 				</element>
 			</section>
-
+			<!-- LDAP -->
+			<section>
+				<element>
+					<datasource id="ldapSettings" />
+				</element>
+				<element>
+					<datasource id="ldapUsers" />
+				</element>
+			</section>
 
 			<!-- hidden inline actions -->
 			<section hidden="true">
 				<element>
 					<action eventId="subjectEvent" id="delete" onSuccess="/users">
 						<params>
-							<param name="userid">${userid}</param>
-							<param name="form_action">${form_action}</param>
+							<param name="userId">${userid}</param>
+							<param name="form_action">${act}</param>
 						</params>
 					</action>
 				</element>
-			</section>
-			<section hidden="true">
 				<element>
 					<action eventId="groupEvent" id="deleteGroup" onSuccess="/users#tab_groups">
 						<params>
 							<param name="groupid">${groupid}</param>
-							<param name="form_action">${form_action}</param>
+							<param name="form_action">${act}</param>
 						</params>
 					</action>
 				</element>

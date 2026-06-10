@@ -15,10 +15,19 @@
 					<url-param name="id" />
 				</url-params>
 				<get-params>
-					<get-param name="form_action" />
+					<get-param name="act" />
 					<get-param name="propertyid" />
 					<get-param name="id" />
 					<get-param name="expandSql" />
+					<!-- event filtering -->
+					<get-param name="eAp" />
+					<get-param name="eA" />
+					<get-param name="eB" />
+					<get-param name="eT" />
+					<get-param name="eX" />
+					<get-param name="eU" />
+					<get-param name="eH" />
+					<get-param name="eN" />
 				</get-params>
 				<post-params>
 					<post-param name="form_action" />
@@ -61,6 +70,18 @@
 			<!-- Database Connections -->
 			<section>
 				<element passive="true">
+					<action eventId="databaseConnectionEvent" id="executeSql" onSuccess="/platform/connection/update/${id}&#63;expandSql=true#tab_databaseConnections">
+						<params>
+							<param name="id">${id}</param>
+							<param name="form_action">${form_action}</param>
+						</params>
+						<condition expression="${entity eq 'connection' and action eq 'update' and not empty id}" />
+						<permissions>
+							<permission ref="platform.database.edit" mode="set" />
+						</permissions>
+					</action>
+				</element>
+				<element folded="true" passive="true">
 					<action eventId="databaseConnectionEvent" id="updateConnection" onSuccess="/platform#tab_databaseConnections">
 						<params>
 							<param name="id">${id}</param>
@@ -72,24 +93,19 @@
 						</permissions>
 					</action>
 				</element>
-				<element folded="${expandSql ne 'true'}" passive="true">
-					<action eventId="databaseConnectionEvent" id="executeSql"
-						onSuccess="/platform/connection/update/${id}&#63;expandSql=true#tab_databaseConnections">
+				<element folded="true" passive="true">
+					<datasource id="migrations">
 						<params>
 							<param name="id">${id}</param>
-							<param name="form_action">${form_action}</param>
 						</params>
 						<condition expression="${entity eq 'connection' and action eq 'update' and not empty id}" />
-						<permissions>
-							<permission ref="platform.database.edit" mode="set" />
-						</permissions>
-					</action>
+					</datasource>
 				</element>
 				<element>
 					<datasource id="databaseConnections">
 						<params>
 							<param name="editLink">/platform/connection/update/</param>
-							<param name="testLink">/platform&#63;form_action=testConnection&#38;id=</param>
+							<param name="testLink">/platform&#63;act=testConnection&#38;id=</param>
 							<param name="linkTab">#tab_databaseConnections</param>
 							<param name="editTab">#tab_databaseConnections</param>
 						</params>
@@ -110,6 +126,18 @@
 				</element>
 			</section>
 
+			<!-- platform events -->
+			<section hidden="true">
+				<element>
+					<datasource id="eventFilter" />
+				</element>
+			</section>
+			<section>
+				<element>
+					<datasource id="platformEvents" />
+				</element>
+			</section>
+
 			<!-- dictionary -->
 			<section>
 				<element>
@@ -119,21 +147,21 @@
 
 			<!-- hidden inline actions -->
 			<section hidden="true">
-				<element>
+				<!--element>
 					<action eventId="databaseConnectionEvent" id="testConnection" onSuccess="/platform#tab_databaseConnections">
 						<params>
-							<param name="form_action">${form_action}</param>
+							<param name="form_action">${act}</param>
 							<param name="id">${id}</param>
 						</params>
 						<permissions>
 							<permission ref="platform.database.test" mode="set" />
 						</permissions>
 					</action>
-				</element>
+				</element-->
 				<element>
 					<action eventId="propertyEvent" id="delete-platform-property" onSuccess="/platform#tab_platformProperties">
 						<params>
-							<param name="form_action">${form_action}</param>
+							<param name="form_action">${act}</param>
 							<param name="propertyid">${propertyid}</param>
 						</params>
 					</action>
@@ -145,7 +173,7 @@
 					<!-- this needs to be the very last action, because the old site and application have been destroyed after execution! -->
 					<action eventId="platformEvent" id="reloadPlatform" onSuccess="/platform#tab_platformProperties">
 						<params>
-							<param name="action">${form_action}</param>
+							<param name="action">${act}</param>
 						</params>
 					</action>
 				</element>

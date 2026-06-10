@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2017 the original author or authors.
+ * Copyright 2011-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import java.io.IOException;
 
 import org.appng.api.FieldProcessor;
 import org.appng.api.ProcessingException;
+import org.appng.api.model.Property.Type;
 import org.appng.api.support.CallableAction;
 import org.appng.api.support.CallableDataSource;
 import org.appng.application.manager.form.PropertyForm;
@@ -43,8 +44,8 @@ public class ApplicationPropertiesTest extends AbstractTest {
 		application.setName("manager");
 		applicationRepository.save(application);
 
-		ActionCall actionCall = getAction(PROPERTY_EVENT, "create-application-property").withParam(FORM_ACTION,
-				"create-application-property").withParam("appid", "1");
+		ActionCall actionCall = getAction(PROPERTY_EVENT, "create-application-property")
+				.withParam(FORM_ACTION, "create-application-property").withParam("appid", "1");
 		CallableAction action = actionCall.getCallableAction(new PropertyForm(new PropertyImpl(TESTPROPERTY, "5")));
 		FieldProcessor perform = action.perform();
 		validate(perform.getMessages());
@@ -54,7 +55,7 @@ public class ApplicationPropertiesTest extends AbstractTest {
 
 	@Test
 	public void testShowAll() throws ProcessingException, IOException {
-		addParameter("sortApplication-properties", "id:asc");
+		addParameter("sortApplication-properties", "shortName:asc");
 		initParameters();
 		CallableDataSource dataSource = getDataSource("application-properties").withParam("appid", "1")
 				.getCallableDataSource();
@@ -76,14 +77,14 @@ public class ApplicationPropertiesTest extends AbstractTest {
 				.withParam(FORM_ACTION, "update-application-property").withParam("propertyid", PROPERTY_NAME)
 				.withParam("appid", "1");
 		PropertyImpl property = new PropertyImpl(TESTPROPERTY, "7", "9");
+		property.setType(Type.INT);
 		property.setClob("");
-		CallableAction action = actionCall
-				.getCallableAction(new PropertyForm(property));
+		CallableAction action = actionCall.getCallableAction(new PropertyForm(property));
 		FieldProcessor perform = action.perform();
 		validate(perform.getMessages());
 
-		CallableDataSource dataSource = getDataSource("property").withParam("appid", "1")
-				.withParam("id", PROPERTY_NAME).getCallableDataSource();
+		CallableDataSource dataSource = getDataSource("property").withParam("appid", "1").withParam("id", PROPERTY_NAME)
+				.getCallableDataSource();
 		dataSource.perform("test");
 		validate(dataSource.getDatasource(), "-data");
 	}

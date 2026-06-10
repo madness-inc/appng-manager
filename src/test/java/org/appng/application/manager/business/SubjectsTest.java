@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2017 the original author or authors.
+ * Copyright 2011-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,18 +19,23 @@ import java.io.IOException;
 
 import org.appng.api.FieldProcessor;
 import org.appng.api.ProcessingException;
+import org.appng.api.model.Subject;
 import org.appng.api.model.UserType;
 import org.appng.api.support.CallableAction;
 import org.appng.api.support.CallableDataSource;
 import org.appng.application.manager.form.SubjectForm;
+import org.appng.application.manager.service.ManagerService;
 import org.appng.core.domain.GroupImpl;
 import org.appng.core.domain.SubjectImpl;
+import org.appng.core.security.BCryptPasswordHandler;
 import org.appng.testsupport.validation.DifferenceHandler;
 import org.custommonkey.xmlunit.Difference;
 import org.custommonkey.xmlunit.DifferenceListener;
+import org.junit.Assert;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class SubjectsTest extends AbstractTest {
@@ -38,6 +43,9 @@ public class SubjectsTest extends AbstractTest {
 	private static final String SUBJECT_EVENT = "subjectEvent";
 
 	private DifferenceListener differenceListener;
+
+	@Autowired
+	private ManagerService managerService;
 
 	public SubjectsTest() {
 		// since different JVMs may return a different amount of Timezones, ignore content
@@ -50,7 +58,7 @@ public class SubjectsTest extends AbstractTest {
 				if (null == xpathLocation) {
 					xpathLocation = difference.getTestNodeDetail().getXpathLocation();
 				}
-				if (xpathLocation.contains("/data[1]/selection[4]/optionGroup")) {
+				if (xpathLocation.contains("/data[1]/selection[5]/optionGroup")) {
 					return RETURN_IGNORE_DIFFERENCE_NODES_IDENTICAL;
 				}
 				return RETURN_ACCEPT_DIFFERENCE;
@@ -71,8 +79,9 @@ public class SubjectsTest extends AbstractTest {
 
 		SubjectImpl newSubject = getSubject();
 		SubjectForm subjectForm = new SubjectForm(newSubject);
-		subjectForm.setPassword("secret");
-		subjectForm.setPasswordConfirmation("secret");
+		String password = site.getPasswordPolicy().generatePassword();
+		subjectForm.setPassword(password);
+		subjectForm.setPasswordConfirmation(password);
 		subjectForm.getGroupIds().add(1);
 		subjectForm.getGroupIds().add(2);
 
@@ -87,11 +96,11 @@ public class SubjectsTest extends AbstractTest {
 		SubjectImpl anotherSubject = getSubject();
 		anotherSubject.setName("user");
 		SubjectForm anotherForm = new SubjectForm(anotherSubject);
-		anotherForm.setPassword("foobar");
-		anotherForm.setPasswordConfirmation("foobar");
+		anotherForm.setPassword(password);
+		anotherForm.setPasswordConfirmation(password);
 		anotherForm.getGroupIds().add(1);
-		callableAction = getAction(SUBJECT_EVENT, "create").withParam(FORM_ACTION, "create").getCallableAction(
-				anotherForm);
+		callableAction = getAction(SUBJECT_EVENT, "create").withParam(FORM_ACTION, "create")
+				.getCallableAction(anotherForm);
 
 		callableAction.perform();
 	}
@@ -99,6 +108,8 @@ public class SubjectsTest extends AbstractTest {
 	@Test
 	public void testCreateValidationFail() throws Exception {
 		SubjectForm form = new SubjectForm();
+		form.setPassword("§");
+		form.setPasswordConfirmation("§");
 		form.getSubject().setUserType(UserType.LOCAL_USER);
 		CallableAction callableAction = getAction(SUBJECT_EVENT, "create").withParam(FORM_ACTION, "create")
 				.getCallableAction(form);
@@ -109,8 +120,9 @@ public class SubjectsTest extends AbstractTest {
 	@Test
 	public void testCreateNameExists() throws Exception {
 		SubjectForm form = new SubjectForm(getSubject());
-		form.setPassword("foobar");
-		form.setPasswordConfirmation("foobar");
+		String password = site.getPasswordPolicy().generatePassword();
+		form.setPassword(password);
+		form.setPasswordConfirmation(password);
 		CallableAction callableAction = getAction(SUBJECT_EVENT, "create").withParam(FORM_ACTION, "create")
 				.getCallableAction(form);
 		callableAction.perform();
@@ -119,8 +131,8 @@ public class SubjectsTest extends AbstractTest {
 
 	@Test
 	public void testDelete() throws ProcessingException, IOException {
-		CallableAction callableAction = getAction(SUBJECT_EVENT, "delete").withParam("userid", "2")
-				.withParam("form_action", "delete").getCallableAction(null);
+		CallableAction callableAction = getAction(SUBJECT_EVENT, "delete").withParam("userId", "2")
+				.withParam(FORM_ACTION, "delete").getCallableAction(null);
 
 		FieldProcessor fieldProcessor = callableAction.perform();
 		validate(fieldProcessor.getMessages(), differenceListener);
@@ -128,7 +140,7 @@ public class SubjectsTest extends AbstractTest {
 
 	@Test
 	public void testShowOne() throws Exception {
-		CallableDataSource siteDatasource = getDataSource("user").withParam("userid", "1").getCallableDataSource();
+		CallableDataSource siteDatasource = getDataSource("user").withParam("userId", "1").getCallableDataSource();
 		siteDatasource.perform("test");
 
 		validate(siteDatasource.getDatasource(), differenceListener);
@@ -147,19 +159,33 @@ public class SubjectsTest extends AbstractTest {
 	}
 
 	@Test
+	public void testShowAllFilterGroup() throws Exception {
+		addParameter("f_gid", "1");
+		initParameters();
+		CallableDataSource siteDatasource = getDataSource("users").getCallableDataSource();
+		siteDatasource.perform("test");
+		validate(siteDatasource.getDatasource());
+	}
+
+	@Test
 	public void testUpdate() throws Exception {
 		SubjectImpl s = getSubject();
 		s.setRealname("Jane Doe");
 		s.setTimeZone("Europe/Zurich");
 		SubjectForm form = new SubjectForm(s);
-		form.setPassword("newpassword");
-		form.setPasswordConfirmation("newpassword");
-		CallableAction callableAction = getAction(SUBJECT_EVENT, "update").withParam("userid", "1")
+		String password = site.getPasswordPolicy().generatePassword();
+		form.setPassword(password);
+		form.setPasswordConfirmation(password);
+		CallableAction callableAction = getAction(SUBJECT_EVENT, "update").withParam("userId", "1")
 				.withParam(FORM_ACTION, "update").getCallableAction(form);
 
 		FieldProcessor fieldProcessor = callableAction.perform();
 		validate(callableAction.getAction(), "-action", differenceListener);
 		validate(fieldProcessor.getMessages(), "-messages");
+
+		Subject subjectByEmail = managerService.getSubjectByEmail(s.getEmail());
+		boolean validPassword = new BCryptPasswordHandler(subjectByEmail).isValidPassword(password);
+		Assert.assertTrue(validPassword);
 	}
 
 	private SubjectImpl getSubject() {

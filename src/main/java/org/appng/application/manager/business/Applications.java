@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2017 the original author or authors.
+ * Copyright 2011-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,25 +30,19 @@ import org.appng.application.manager.service.Service;
 import org.appng.application.manager.service.ServiceAware;
 import org.appng.core.domain.ApplicationImpl;
 import org.appng.core.service.MigrationService.MigrationStatus;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Provides CRUD-operations for a {@link ApplicationImpl}.
  * 
  * @author Matthias Müller
- * 
  */
 
-@Lazy
+@Slf4j
 @Component
-@Scope("request")
 public class Applications extends ServiceAware implements DataProvider, ActionProvider<ApplicationImpl> {
-
-	private static final Logger log = LoggerFactory.getLogger(Applications.class);
 
 	private static final String FORM_ACTION = "form_action";
 	private static final String DEACTIVATE_APPLICATION = "deactivateApplication";
@@ -62,34 +56,34 @@ public class Applications extends ServiceAware implements DataProvider, ActionPr
 		String errorMessage = null;
 		String okMessage = null;
 		Service service = getService();
-		Integer applicationId = request.convert(options.getOptionValue(APPLICATION, ID), Integer.class);
+		Integer applicationId = options.getInteger(APPLICATION, ID);
 		try {
 			if (ACTION_UPDATE.equals(action)) {
 				applicationBean.setId(applicationId);
 				errorMessage = MessageConstants.APPLICATION_UPDATE_ERROR;
-				service.updateApplication(environment, applicationBean, fp);
+				service.updateApplication(request, environment, applicationBean, fp);
 				okMessage = MessageConstants.APPLICATION_UPDATED;
 			} else if (ACTION_DELETE.equals(action)) {
 				errorMessage = MessageConstants.APPLICATION_DELETE_ERROR;
-				service.deleteApplication(applicationId, fp);
+				service.deleteApplication(request, applicationId, fp);
 				okMessage = MessageConstants.APPLICATION_DELETED;
 			} else if (ACTION_CONFIGURE_APPLICATION.equals(action)) {
 				MigrationStatus migrationStatus = null;
-				Integer siteId = request.convert(options.getOptionValue(SITE, ID), Integer.class);
+				Integer siteId = options.getInteger(SITE, ID);
 				String formAction = options.getOptionValue(ACTION, FORM_ACTION);
 				if (ACTIVATE_APPLICATION.equals(formAction)) {
 					errorMessage = MessageConstants.APPLICATION_UPDATE_ERROR;
-					migrationStatus = service.assignApplicationToSite(siteId, applicationId, fp);
+					migrationStatus = service.assignApplicationToSite(request, siteId, applicationId, fp);
 					okMessage = MessageConstants.APPLICATION_ACTIVATED;
 				} else if (DEACTIVATE_APPLICATION.equals(formAction)) {
 					errorMessage = MessageConstants.APPLICATION_UPDATE_ERROR;
-					migrationStatus = service.removeApplicationFromSite(siteId, applicationId, fp);
+					migrationStatus = service.removeApplicationFromSite(request, siteId, applicationId, fp);
 					okMessage = MessageConstants.APPLICATION_DEACTIVATED;
 				}
 				if (migrationStatus.isErroneous()) {
 					okMessage = null;
 				} else {
-					String reloadMessage = request.getMessage(MessageConstants.RELOAD_PLATFORM);
+					String reloadMessage = request.getMessage(MessageConstants.RELOAD_SITE);
 					fp.addNoticeMessage(reloadMessage);
 				}
 			}
@@ -107,8 +101,8 @@ public class Applications extends ServiceAware implements DataProvider, ActionPr
 	public DataContainer getData(Site site, Application application, Environment environment, Options options,
 			Request request, FieldProcessor fp) {
 		Service service = getService();
-		Integer applicationId = request.convert(options.getOptionValue(APPLICATION, ID), Integer.class);
-		Integer siteId = request.convert(options.getOptionValue(SITE, ID), Integer.class);
+		Integer applicationId = options.getInteger(APPLICATION, ID);
+		Integer siteId = options.getInteger(SITE, ID);
 
 		DataContainer data = null;
 		try {
