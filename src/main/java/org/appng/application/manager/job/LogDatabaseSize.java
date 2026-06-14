@@ -32,6 +32,7 @@ import org.appng.core.service.CoreService;
 import org.appng.core.service.DatabaseService;
 import org.appng.mail.MailTransport;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.MessageSource;
 
 public class LogDatabaseSize extends ReportJobBase {
@@ -41,7 +42,7 @@ public class LogDatabaseSize extends ReportJobBase {
 
 	@Autowired
 	LogDatabaseSize(PlatformEventService service, MailTransport mailTransport, MessageSource messageSource,
-			RoleService roleService, CoreService coreService, DatabaseService databaseService) {
+			RoleService roleService, @Qualifier("coreService") CoreService coreService, DatabaseService databaseService) {
 		super(service, mailTransport, messageSource, roleService);
 		this.databaseService = databaseService;
 		this.coreService = coreService;

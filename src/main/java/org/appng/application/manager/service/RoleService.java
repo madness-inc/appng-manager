@@ -17,8 +17,8 @@ package org.appng.application.manager.service;
 
 import java.util.Collection;
 
-import javax.persistence.EntityManager;
-import javax.persistence.TypedQuery;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.TypedQuery;
 
 import org.appng.api.BusinessException;
 import org.appng.api.model.Application;

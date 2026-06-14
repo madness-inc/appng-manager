@@ -15,7 +15,7 @@
  */
 package org.appng.application.manager.form;
 
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 
 import org.appng.api.FileUpload;
 import org.appng.api.model.Resource;

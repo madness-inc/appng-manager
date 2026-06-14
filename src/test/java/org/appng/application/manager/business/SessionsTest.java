@@ -19,7 +19,7 @@ import java.text.ParseException;
 import java.util.Arrays;
 import java.util.List;
 
-import javax.servlet.ServletContext;
+import jakarta.servlet.ServletContext;
 
 import org.apache.catalina.session.PersistentManagerBase;
 import org.apache.commons.lang3.time.DateUtils;

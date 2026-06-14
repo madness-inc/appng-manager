@@ -132,7 +132,7 @@ public class Environment implements DataProvider {
 						new LeveledEntry(new DecimalFormat("#0.00 %").format(percentage), level));
 			}
 		} catch (JMException e) {
-			log.error("error adding memory usage", e);
+			LOGGER.error("error adding memory usage", e);
 		}
 	}
 

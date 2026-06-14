@@ -43,7 +43,7 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * Provides CRUD-operations for a {@link PropertyImpl}.
- * 
+ *
  * @author Matthias Müller
  */
 
@@ -89,7 +89,7 @@ public class Properties extends ServiceAware implements ActionProvider<PropertyF
 				}
 			} catch (BusinessException ex) {
 				String message = request.getMessage(ex.getMessageKey(), ex.getMessageArgs());
-				log.error(message, ex);
+				LOGGER.error(message, ex);
 				fp.addErrorMessage(message);
 			}
 		}
@@ -143,7 +143,7 @@ public class Properties extends ServiceAware implements ActionProvider<PropertyF
 			fp.addOkMessage(message);
 		} catch (BusinessException ex) {
 			String message = request.getMessage(errorMessage, propertyName);
-			log.error(message, ex);
+			LOGGER.error(message, ex);
 			fp.addErrorMessage(message);
 		}
 	}

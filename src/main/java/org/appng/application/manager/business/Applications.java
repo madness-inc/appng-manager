@@ -36,7 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * Provides CRUD-operations for a {@link ApplicationImpl}.
- * 
+ *
  * @author Matthias Müller
  */
 
@@ -93,7 +93,7 @@ public class Applications extends ServiceAware implements DataProvider, ActionPr
 			}
 		} catch (BusinessException ex) {
 			String message = request.getMessage(errorMessage, applicationId);
-			log.error(message, ex);
+			LOGGER.error(message, ex);
 			fp.addErrorMessage(message);
 		}
 	}
@@ -110,7 +110,7 @@ public class Applications extends ServiceAware implements DataProvider, ActionPr
 			data = service.searchApplications(fp, siteId, applicationId, assignedOnly);
 		} catch (BusinessException be) {
 			String message = request.getMessage(be.getMessageKey(), be.getMessageArgs());
-			log.error(message, be);
+			LOGGER.error(message, be);
 			fp.addErrorMessage(message);
 		}
 		return data;

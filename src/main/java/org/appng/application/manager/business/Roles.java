@@ -35,7 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * Provides CRUD-operations for a {@link org.appng.core.domain.RoleImpl}.
- * 
+ *
  * @author Matthias Müller
  */
 
@@ -68,7 +68,7 @@ public class Roles extends ServiceAware implements DataProvider, ActionProvider<
 			String message = request.getMessage(okMessage, applicationroleId);
 			fp.addOkMessage(message);
 		} catch (BusinessException e) {
-			log.error("error while performing action", e);
+			LOGGER.error("error while performing action", e);
 			request.addErrorMessage(fp, e);
 		}
 	}
@@ -86,7 +86,7 @@ public class Roles extends ServiceAware implements DataProvider, ActionProvider<
 				data = service.searchRole(fp, applicationRoleId, applicationId);
 			} catch (BusinessException ex) {
 				String message = request.getMessage(ex.getMessageKey(), ex.getMessageArgs());
-				log.error(message, ex);
+				LOGGER.error(message, ex);
 				fp.addErrorMessage(message);
 			}
 		}

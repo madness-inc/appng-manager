@@ -33,8 +33,8 @@ import org.appng.mail.Mail.RecipientType;
 import org.appng.mail.MailTransport;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
-
 import lombok.extern.slf4j.Slf4j;
+
 
 @Slf4j
 public class PlatformEventReportJob extends ReportJobBase {
@@ -75,7 +75,7 @@ public class PlatformEventReportJob extends ReportJobBase {
 			addReport(mail, eventFilter);
 			mailTransport.send(mail);
 		} else {
-			log.info("No report receivers defined, set {} accordingly!", ManagerSettings.EVENT_REPORT_RECEIVERS);
+			LOGGER.info("No report receivers defined, set {} accordingly!", ManagerSettings.EVENT_REPORT_RECEIVERS);
 		}
 	}
 

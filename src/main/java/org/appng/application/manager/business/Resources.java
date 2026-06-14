@@ -38,7 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * ApplicationResources action class reads all resources of a application
- * 
+ *
  * @author Matthias Herlitzius
  */
 
@@ -69,7 +69,7 @@ public class Resources extends ServiceAware implements ActionProvider<ResourceFo
 
 		} catch (BusinessException ex) {
 			String message = request.getMessage(errorMessage, resourceName);
-			log.error(message, ex);
+			LOGGER.error(message, ex);
 			fp.addErrorMessage(message);
 		}
 	}

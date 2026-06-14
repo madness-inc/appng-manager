@@ -26,7 +26,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
-import javax.servlet.ServletContext;
+import jakarta.servlet.ServletContext;
 
 import org.apache.catalina.Manager;
 import org.apache.catalina.Store;
@@ -175,7 +175,7 @@ public class Sessions extends ServiceAware implements ActionProvider<Void>, Data
 						maxSessions));
 			}
 		} catch (IOException e) {
-			log.error("error while retrieving sessions keys from store", e);
+			LOGGER.error("error while retrieving sessions keys from store", e);
 			fp.addErrorMessage(request.getMessage(MessageConstants.SESSIONS_READ_ERROR));
 		}
 		return immutableSessions;
@@ -326,7 +326,7 @@ public class Sessions extends ServiceAware implements ActionProvider<Void>, Data
 				}
 			}
 		} catch (IOException e) {
-			log.error("error expiring session", e);
+			LOGGER.error("error expiring session", e);
 		}
 		return false;
 	}

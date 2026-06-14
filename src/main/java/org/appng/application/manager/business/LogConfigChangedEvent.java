@@ -26,11 +26,17 @@ import org.appng.api.Environment;
 import org.appng.api.InvalidConfigurationException;
 import org.appng.api.messaging.Event;
 import org.appng.api.model.Site;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import lombok.extern.slf4j.Slf4j;
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.joran.JoranConfigurator;
+import ch.qos.logback.core.joran.spi.JoranException;
 
-@Slf4j
+
 public class LogConfigChangedEvent extends Event implements Serializable {
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(LogConfigChangedEvent.class);
 
 	private static final long serialVersionUID = 1L;
 	private final String content;
@@ -46,19 +52,14 @@ public class LogConfigChangedEvent extends Event implements Serializable {
 		try {
 			File configFile = new File(configFilePath).getAbsoluteFile();
 			FileUtils.write(configFile, content, StandardCharsets.UTF_8);
-			if (configFilePath.contains("log4j2.xml")) {
-				org.apache.logging.log4j.core.LoggerContext loggerCtx = org.apache.logging.log4j.core.LoggerContext
-						.getContext(false);
-				org.apache.logging.log4j.core.config.Configuration config = new org.apache.logging.log4j.core.config.xml.XmlConfigurationFactory()
-						.getConfiguration(loggerCtx, "appNG", configFile.toURI());
-				loggerCtx.reconfigure(config);
-			} else {
-				new org.apache.log4j.PropertyConfigurator().doConfigure(configFile.getAbsolutePath(),
-						org.apache.log4j.LogManager.getLoggerRepository());
-			}
-			log.info("Updated {}", configFile.getPath());
-		} catch (IOException e) {
-			throw new BusinessException("error while executing ReadloadConfigEvent", e);
+			LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
+			loggerContext.reset();
+			JoranConfigurator configurator = new JoranConfigurator();
+			configurator.setContext(loggerContext);
+			configurator.doConfigure(configFile);
+			LOGGER.info("Updated {}", configFile.getPath());
+		} catch (IOException | JoranException e) {
+			throw new BusinessException("error while executing LogConfigChangedEvent", e);
 		}
 	}
 

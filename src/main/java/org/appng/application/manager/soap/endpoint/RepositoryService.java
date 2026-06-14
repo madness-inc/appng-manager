@@ -41,8 +41,7 @@ import org.appng.core.xml.repository.GetPackagesResponse;
 import org.appng.core.xml.repository.Package;
 import org.appng.core.xml.repository.PackageVersions;
 import org.appng.core.xml.repository.Packages;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.ws.server.endpoint.annotation.Endpoint;
 import org.springframework.ws.server.endpoint.annotation.PayloadRoot;
@@ -58,10 +57,10 @@ import org.springframework.ws.server.endpoint.annotation.ResponsePayload;
  * @author Matthias Müller
  * 
  */
+@Slf4j
 @Endpoint
 public class RepositoryService implements SoapService {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(RepositoryService.class);
 	private static final String SCHEMA_LOCATION = "appng-repository.xsd";
 	private static final String REPOSITORY = "repository";
 	private static final String NAMESPACE = "http://www.appng.org/schema/repository";

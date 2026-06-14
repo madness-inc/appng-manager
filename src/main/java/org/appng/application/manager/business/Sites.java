@@ -42,7 +42,7 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * Provides CRUD-operations for a {@link SiteImpl}, furthermore supports reloading a site.
- * 
+ *
  * @author Matthias Müller
  */
 
@@ -114,7 +114,7 @@ public class Sites extends ServiceAware implements DataProvider, ActionProvider<
 		} catch (BusinessException ex) {
 			if (null != errorMessage) {
 				String message = request.getMessage(errorMessage, siteId);
-				log.error("error during action '" + action + "': " + message, ex);
+				LOGGER.error("error during action '" + action + "': " + message, ex);
 				fp.addErrorMessage(message);
 			}
 		}
@@ -136,7 +136,7 @@ public class Sites extends ServiceAware implements DataProvider, ActionProvider<
 						StringUtils.defaultString(active, "all"));
 			} catch (BusinessException e) {
 				String message = request.getMessage(e.getMessageKey(), e.getMessageArgs());
-				log.error(message, e);
+				LOGGER.error(message, e);
 				fp.addErrorMessage(message);
 			}
 		}

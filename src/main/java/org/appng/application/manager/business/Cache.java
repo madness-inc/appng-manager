@@ -15,8 +15,6 @@
  */
 package org.appng.application.manager.business;
 
-import java.io.IOException;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -57,9 +55,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import com.hazelcast.cache.ICache;
+
 
 /**
  * Provides methods to interact with the page cache. Elements are stored in the cache by the {@link PageCacheFilter}.
@@ -67,7 +67,6 @@ import com.hazelcast.cache.ICache;
  * @author Matthias Herlitzius
  */
 @Lazy
-@Slf4j
 @Component
 public class Cache extends ServiceAware implements ActionProvider<Void>, DataProvider {
 
@@ -124,6 +123,11 @@ public class Cache extends ServiceAware implements ActionProvider<Void>, DataPro
 		return result;
 	}
 
+	private Entry<String, String> getStatEntry(Request request, Map<String, String> stats, String statKey) {
+		String label = request.getMessage(MessageConstants.CACHE_STATISTICS + "." + statKey);
+		return new DefaultMapEntry<>(label, stats.get(statKey));
+	}
+
 	public Page<CacheEntry> getCacheEntries(Request request, FieldProcessor fp, Optional<Site> cacheSite,
 			DataContainer dataContainer) {
 		Pageable pageable = fp.getPageable();
@@ -137,8 +141,8 @@ public class Cache extends ServiceAware implements ActionProvider<Void>, DataPro
 				if (cacheSize > maxCacheEntries) {
 					Iterator<javax.cache.Cache.Entry<String, CachedResponse>> elements = cache.iterator();
 					int idx = 0;
-					int startIdx = pageable.getOffset();
-					int endIdx = pageable.getOffset() + pageable.getPageSize();
+					int startIdx = (int) pageable.getOffset();
+					int endIdx = (int) pageable.getOffset() + pageable.getPageSize();
 					while (elements.hasNext()) {
 						javax.cache.Cache.Entry<java.lang.String, CachedResponse> entry = elements.next();
 						CachedResponse cachedResponse = entry.getValue();
@@ -196,19 +200,6 @@ public class Cache extends ServiceAware implements ActionProvider<Void>, DataPro
 			}
 		}
 		return new PageImpl<>(cacheEntries, pageable, cacheSize);
-	}
-
-	protected Optional<CacheEntry> getEntry(Site cacheSite, BlockingCache cache, Serializable key) {
-		Element element = cache.getQuiet(key);
-		if (null != element && null != element.getObjectValue()) {
-			try {
-				PageInfo pageInfo = (PageInfo) element.getObjectValue();
-				return Optional.of(new CacheEntry(new AppngCache(key, cacheSite, pageInfo, element)));
-			} catch (IOException e) {
-				// ignore
-			}
-		}
-		return Optional.empty();
 	}
 
 	public class CacheEntry {

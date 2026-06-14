@@ -41,7 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * Provides CRUD-operations for a {@link SubjectImpl}.
- * 
+ *
  * @author Matthias Müller
  */
 
@@ -86,7 +86,7 @@ public class Subjects extends ServiceAware implements DataProvider, ActionProvid
 			}
 		} catch (BusinessException ex) {
 			String message = request.getMessage(errorMessage, subjectId);
-			log.error(message, ex);
+			LOGGER.error(message, ex);
 			fp.addErrorMessage(message);
 		}
 	}
@@ -105,7 +105,7 @@ public class Subjects extends ServiceAware implements DataProvider, ActionProvid
 				data = service.searchSubjects(request, fp, subjectId, defaultTimezone, languages);
 			} catch (BusinessException ex) {
 				String message = request.getMessage(ex.getMessageKey(), ex.getMessageArgs());
-				log.error(message, ex);
+				LOGGER.error(message, ex);
 				fp.addErrorMessage(message);
 			}
 		}

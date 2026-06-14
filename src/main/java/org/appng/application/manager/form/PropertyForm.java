@@ -15,7 +15,7 @@
  */
 package org.appng.application.manager.form;
 
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 
 import org.apache.commons.lang3.StringUtils;
 import org.appng.api.Environment;

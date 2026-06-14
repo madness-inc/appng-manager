@@ -35,7 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * Provides CRUD-operations for a {@link PermissionImpl}.
- * 
+ *
  * @author Matthias Müller
  */
 
@@ -70,7 +70,7 @@ public class Permissions extends ServiceAware implements ActionProvider<Permissi
 		} catch (BusinessException ex) {
 			if (null != errorMessage) {
 				String message = request.getMessage(errorMessage, permissionId);
-				log.error(message, ex);
+				LOGGER.error(message, ex);
 				fp.addErrorMessage(message);
 			}
 		}
@@ -89,7 +89,7 @@ public class Permissions extends ServiceAware implements ActionProvider<Permissi
 				data = service.searchPermissions(fp, permissionId, applicationId);
 			} catch (BusinessException ex) {
 				String message = request.getMessage(ex.getMessageKey(), ex.getMessageArgs());
-				log.error(message, ex);
+				LOGGER.error(message, ex);
 				fp.addErrorMessage(message);
 			}
 		}

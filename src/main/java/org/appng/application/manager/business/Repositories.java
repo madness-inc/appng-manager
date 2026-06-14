@@ -37,7 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * Provides CRUD-operations for a {@link org.appng.core.domain.RepositoryImpl}.
- * 
+ *
  * @author Matthias Herlitzius
  */
 
@@ -87,7 +87,7 @@ public class Repositories extends ServiceAware implements DataProvider, ActionPr
 			fp.addOkMessage(message);
 		} catch (BusinessException ex) {
 			String message = request.getMessage(errorMessage, repositoryId, archiveName);
-			log.error(message, ex);
+			LOGGER.error(message, ex);
 			fp.addErrorMessage(message);
 		}
 	}

@@ -36,6 +36,7 @@ import org.appng.application.manager.MessageConstants;
 import org.appng.core.domain.SubjectImpl;
 import org.appng.core.service.CoreService;
 import org.appng.core.service.LdapService;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import lombok.AllArgsConstructor;
@@ -46,7 +47,7 @@ public class LdapUsers implements DataProvider {
 
 	private CoreService coreService;
 
-	private LdapUsers(CoreService coreService) {
+	private LdapUsers(@Qualifier("coreService") CoreService coreService) {
 		this.coreService = coreService;
 	}
 

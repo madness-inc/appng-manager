@@ -80,7 +80,7 @@ public class Installation extends ServiceAware implements DataProvider, ActionPr
 			fp.addOkMessage(message);
 		} catch (BusinessException ex) {
 			String message = request.getMessage(errorMessage, repositoryId, packageName, packageVersion);
-			log.error(message, ex);
+			LOGGER.error(message, ex);
 			fp.addErrorMessage(message);
 		}
 	}
@@ -105,7 +105,7 @@ public class Installation extends ServiceAware implements DataProvider, ActionPr
 				data = service.searchPackageVersions(request, fp, repositoryId, applicationName);
 			}
 		} catch (BusinessException ex) {
-			log.error("Error while retrieving packages from repository", ex);
+			LOGGER.error("Error while retrieving packages from repository", ex);
 			data.setPage(new ArrayList<>(), fp.getPageable());
 		}
 		return data;

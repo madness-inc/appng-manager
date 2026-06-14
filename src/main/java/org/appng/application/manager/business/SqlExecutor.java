@@ -38,8 +38,6 @@ import org.appng.core.domain.DatabaseConnection;
 import org.appng.core.domain.DatabaseConnection.DatabaseType;
 import org.flywaydb.core.api.configuration.Configuration;
 import org.flywaydb.core.api.configuration.FluentConfiguration;
-import org.flywaydb.core.internal.database.hsqldb.HSQLDBParser;
-import org.flywaydb.core.internal.database.postgresql.PostgreSQLParser;
 import org.flywaydb.core.internal.parser.Parser;
 import org.flywaydb.core.internal.parser.ParsingContext;
 import org.flywaydb.core.internal.resource.StringResource;
@@ -169,7 +167,7 @@ public class SqlExecutor extends ServiceAware implements DataProvider, ActionPro
 			return Streams.stream(sqlScript.getSqlStatements())
 					.map(org.flywaydb.core.internal.sqlscript.SqlStatement::getSql).collect(Collectors.toList());
 		} catch (ReflectiveOperationException e) {
-			log.error("failed creating parser", e);
+			LOGGER.error("failed creating parser", e);
 		}
 		return new ArrayList<>();
 	}
@@ -185,9 +183,9 @@ public class SqlExecutor extends ServiceAware implements DataProvider, ActionPro
 		case MSSQL:
 			return createParser("sqlserver.SQLServerDatabaseType", configuration);
 		case POSTGRESQL:
-			return new PostgreSQLParser(configuration, new ParsingContext());
+			return createParser("postgresql.PostgreSQLDatabaseType", configuration);
 		default:
-			return new HSQLDBParser(configuration, new ParsingContext());
+			return createParser("hsqldb.HSQLDBDatabaseType", configuration);
 		}
 	}
 

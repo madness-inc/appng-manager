@@ -112,8 +112,8 @@ public class ClusterState implements DataProvider, ActionProvider<Void> {
 
 		LocalNodeState localNode = new LocalNodeState(Messaging.getNodeId(environment), new Date(), heap, nonHeap,
 				System.getProperties(), System.getenv(), siteStates);
-		if (log.isDebugEnabled()) {
-			log.debug("local node is {}", localNode);
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("local node is {}", localNode);
 		}
 		localNode.setCurrent(true);
 		return localNode;

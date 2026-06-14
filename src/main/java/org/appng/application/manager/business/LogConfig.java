@@ -19,7 +19,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotNull;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -46,7 +46,7 @@ import lombok.Data;
 @Component
 public class LogConfig extends ServiceAware implements DataProvider, ActionProvider<LogFile> {
 
-	public @Value("${loggingConfig:WEB-INF/conf/log4j.properties}") String logConfigFile;
+	public @Value("${loggingConfig:WEB-INF/conf/logback.xml}") String logConfigFile;
 
 	@Value("${platform." + Platform.Property.PLATFORM_ROOT_PATH + "}")
 	private String rootPath;

@@ -77,7 +77,7 @@ public class Mailer implements DataProvider, ActionProvider<MailForm> {
 		} catch (MailException m) {
 			fp.addErrorMessage(request.getMessage(MessageConstants.MAIL_ERROR, mailForm.getReceiverAddress()));
 			fp.addErrorMessage(m.getClass().getName() + ": " + m.getMessage());
-			log.error("error sending mail", m);
+			LOGGER.error("error sending mail", m);
 		}
 
 	}

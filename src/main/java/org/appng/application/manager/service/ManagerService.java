@@ -126,8 +126,7 @@ import org.appng.xml.platform.Option;
 import org.appng.xml.platform.Selection;
 import org.appng.xml.platform.SelectionGroup;
 import org.appng.xml.platform.SelectionType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.support.PropertyComparator;
 import org.springframework.context.MessageSource;
@@ -145,10 +144,10 @@ import org.springframework.transaction.annotation.Transactional;
  * 
  * @author Matthias Müller
  */
+@Slf4j
 @Transactional(rollbackFor = BusinessException.class)
 public class ManagerService extends CoreService implements Service {
 
-	private Logger logger = LoggerFactory.getLogger(ManagerService.class);
 	private static final String FILTER_GROUP_NAME = "f_gn";
 	public static final String FILTER_SITE_NAME = "f_sn";
 	public static final String FILTER_SITE_DOMAIN = "f_sd";
@@ -170,7 +169,7 @@ public class ManagerService extends CoreService implements Service {
 			if (currentSubject.getId().equals(subjectId)) {
 				throw new BusinessException("can not delete currently used subject!");
 			}
-			SubjectImpl subject = subjectRepository.findOne(subjectId);
+			SubjectImpl subject = subjectRepository.findById(subjectId).orElse(null);
 			if (null != subject) {
 				subjectRepository.delete(subject);
 			} else {
@@ -183,17 +182,17 @@ public class ManagerService extends CoreService implements Service {
 
 	public void deletePermission(Request request, Integer permissionId, FieldProcessor fp) throws BusinessException {
 		try {
-			PermissionImpl permission = permissionRepository.findOne(permissionId);
+			PermissionImpl permission = permissionRepository.findById(permissionId).orElse(null);
 			if (null != permission) {
 				Application application = permission.getApplication();
 				if (application.getPermissions().remove(permission)) {
-					logger.debug("removed permission '" + permission.getName() + "' from Application "
+					LOGGER.debug("removed permission '" + permission.getName() + "' from Application "
 							+ application.getName());
 				}
 
 				for (Role role : application.getRoles()) {
 					if (role.getPermissions().remove(permission)) {
-						logger.debug("removed permission '" + permission.getName() + "' from Role " + role.getName());
+						LOGGER.debug("removed permission '" + permission.getName() + "' from Role " + role.getName());
 					}
 				}
 				permissionRepository.delete(permission);
@@ -224,7 +223,7 @@ public class ManagerService extends CoreService implements Service {
 
 	public void deleteRepository(Request request, Integer repositoryId, FieldProcessor fp) throws BusinessException {
 		try {
-			RepositoryImpl repository = repoRepository.findOne(repositoryId);
+			RepositoryImpl repository = repoRepository.findById(repositoryId).orElse(null);
 			if (null != repository) {
 				repoRepository.delete(repository);
 			} else {
@@ -254,7 +253,7 @@ public class ManagerService extends CoreService implements Service {
 	public void deleteSite(Request request, String host, Integer siteId, final FieldProcessor fp, Site currentSite)
 			throws BusinessException {
 		try {
-			SiteImpl site = siteRepository.findOne(siteId);
+			SiteImpl site = siteRepository.findById(siteId).orElse(null);
 			if (null != site) {
 				if (!site.equals(currentSite) && !site.getHost().equals(host)) {
 					deleteSite(request.getEnvironment(), site);
@@ -272,7 +271,7 @@ public class ManagerService extends CoreService implements Service {
 
 	public void deleteGroup(Request request, Integer id, FieldProcessor fp) throws BusinessException {
 		try {
-			GroupImpl group = groupRepository.findOne(id);
+			GroupImpl group = groupRepository.findById(id).orElse(null);
 			if (null != group) {
 				deleteGroup(group);
 			} else {
@@ -293,7 +292,7 @@ public class ManagerService extends CoreService implements Service {
 
 	public void updateGroup(Request request, Site site, GroupForm form, FieldProcessor fp) throws BusinessException {
 		GroupImpl group = form.getGroup();
-		GroupImpl currentGroup = groupRepository.findOne(group.getId());
+		GroupImpl currentGroup = groupRepository.findById(group.getId()).orElse(null);
 		if (null == currentGroup) {
 			throw new BusinessException("no such group");
 		}
@@ -316,7 +315,7 @@ public class ManagerService extends CoreService implements Service {
 			throws BusinessException {
 		DataContainer data = new DataContainer(fp);
 		if (groupId != null) {
-			GroupImpl group = groupRepository.findOne(groupId);
+			GroupImpl group = groupRepository.findById(groupId).orElse(null);
 			if (null == group) {
 				throw new BusinessException("no such group : " + groupId, MessageConstants.GROUP_NOT_EXISTS);
 			}
@@ -351,7 +350,7 @@ public class ManagerService extends CoreService implements Service {
 	}
 
 	private Selection getRoleSelection(Group group, Integer siteId) {
-		SiteImpl site = siteRepository.findOne(siteId);
+		SiteImpl site = siteRepository.findById(siteId).orElse(null);
 		Selection selection = selectionFactory.fromObjects("roles", "roles", new Object[0], (Selector) null);
 		for (Application application : sortByName(new ArrayList<>(site.getApplications()))) {
 			String name = application.getName();
@@ -374,7 +373,7 @@ public class ManagerService extends CoreService implements Service {
 			Page<RepositoryImpl> repositories = repoRepository.search(fp.getPageable());
 			data.setPage(repositories);
 		} else {
-			RepositoryImpl repository = repoRepository.findOne(repositoryId);
+			RepositoryImpl repository = repoRepository.findById(repositoryId).orElse(null);
 			data.setItem(new RepositoryForm(repository));
 			Selection repositoryTypeSelection = getRepositoryTypeSelection(request, repository.getRepositoryType());
 			if (null != repositoryTypeSelection) {
@@ -392,7 +391,7 @@ public class ManagerService extends CoreService implements Service {
 			String filter) throws BusinessException {
 		DataContainer data = new DataContainer(fp);
 		if (null != repositoryId) {
-			RepositoryImpl repository = repoRepository.findOne(repositoryId);
+			RepositoryImpl repository = repoRepository.findById(repositoryId).orElse(null);
 			try {
 				if (null != repository) {
 					List<ApplicationImpl> applications = applicationRepository.findAll();
@@ -437,7 +436,7 @@ public class ManagerService extends CoreService implements Service {
 		DataContainer data = new DataContainer(fp);
 		try {
 			if ((null != repositoryId) && (StringUtils.isNotBlank(packageName))) {
-				RepositoryImpl repository = repoRepository.findOne(repositoryId);
+				RepositoryImpl repository = repoRepository.findById(repositoryId).orElse(null);
 				if (null != repository) {
 					List<Identifier> packages = new ArrayList<>(applicationRepository.findAll());
 
@@ -465,7 +464,7 @@ public class ManagerService extends CoreService implements Service {
 			Repository repository = getRepository(environment, repositoryName, digest);
 			return repository.getPackages(packageName);
 		} catch (Exception e) {
-			logger.error("error retrieving packages", e);
+			LOGGER.error("error retrieving packages", e);
 		}
 		return new Packages();
 	}
@@ -480,7 +479,7 @@ public class ManagerService extends CoreService implements Service {
 			Repository repository = getRepository(environment, repositoryName, digest);
 			return repository.getPackageVersions(packageName);
 		} catch (Exception e) {
-			logger.error("error retrieving package versions", e);
+			LOGGER.error("error retrieving package versions", e);
 		}
 		return new PackageVersions();
 	}
@@ -554,7 +553,7 @@ public class ManagerService extends CoreService implements Service {
 	public DataContainer searchResources(Request request, Site site, FieldProcessor fp, ResourceType type,
 			Integer resourceId, Integer applicationId) throws BusinessException {
 		DataContainer data = new DataContainer(fp);
-		Application application = applicationRepository.findOne(applicationId);
+		Application application = applicationRepository.findById(applicationId).orElse(null);
 		Resources resourceHolder;
 		try {
 			File appRootFolder = getApplicationRootFolder(request.getEnvironment());
@@ -596,7 +595,7 @@ public class ManagerService extends CoreService implements Service {
 		String okMessage = null;
 		try {
 			Integer id = form.getId();
-			Application application = applicationRepository.findOne(appId);
+			Application application = applicationRepository.findById(appId).orElse(null);
 			boolean fileBased = application.isFileBased();
 			String reloadMessage = request.getMessage(MessageConstants.RELOAD_SITE);
 			File appRootFolder = getApplicationRootFolder(request.getEnvironment());
@@ -615,7 +614,7 @@ public class ManagerService extends CoreService implements Service {
 						String.format("Resource %s of Application %s", fileName, application.getName()));
 			} else {
 				errorMessage = request.getMessage(MessageConstants.RESOURCE_UPDATED_DATABASED_ERROR, fileName);
-				ResourceImpl dbResource = resourceRepository.findOne(resource.getId());
+				ResourceImpl dbResource = resourceRepository.findById(resource.getId()).orElse(null);
 				dbResource.setBytes(form.getContent().getBytes());
 				dbResource.calculateChecksum();
 				okMessage = request.getMessage(MessageConstants.RESOURCE_UPDATED_DATABASED, fileName,
@@ -640,7 +639,7 @@ public class ManagerService extends CoreService implements Service {
 
 	public void createResource(Request request, Site site, Integer appId, UploadForm form, FieldProcessor fp)
 			throws BusinessException {
-		Application application = applicationRepository.findOne(appId);
+		Application application = applicationRepository.findById(appId).orElse(null);
 		String okMessage = null;
 		String errorMessage = null;
 		try {
@@ -699,7 +698,7 @@ public class ManagerService extends CoreService implements Service {
 	public DataContainer searchRole(FieldProcessor fp, Integer roleId, Integer appId) throws BusinessException {
 		DataContainer data = new DataContainer(fp);
 		if (roleId != null) {
-			RoleImpl role = roleRepository.findOne(roleId);
+			RoleImpl role = roleRepository.findById(roleId).orElse(null);
 			if (null == role) {
 				throw new BusinessException("no such Role " + roleId, MessageConstants.ROLE_NOT_EXISTS);
 			}
@@ -748,7 +747,7 @@ public class ManagerService extends CoreService implements Service {
 	private Selection getPermissionSelection(Integer appId, RoleImpl role) {
 		Set<Permission> permissionsFromRole = role.getPermissions();
 		List<PermissionImpl> allPermissions = permissionRepository.findByApplicationId(appId,
-				new Sort(Direction.ASC, "name"));
+				Sort.by(Direction.ASC, "name"));
 		Map<String, List<Permission>> permissionGroups = new HashMap<>();
 		Pattern pattern = Pattern.compile("([^\\.]+)((.)*)");
 		for (Permission permission : allPermissions) {
@@ -786,7 +785,7 @@ public class ManagerService extends CoreService implements Service {
 			throws BusinessException {
 		if (null != appId) {
 			RoleImpl role = roleForm.getRole();
-			Application application = applicationRepository.findOne(appId);
+			Application application = applicationRepository.findById(appId).orElse(null);
 			role.setApplication(application);
 			checkUniqueRoleName(request, role, role.getName(), fp);
 			roleRepository.save(role);
@@ -798,7 +797,7 @@ public class ManagerService extends CoreService implements Service {
 
 	public void updateRole(Request request, RoleForm form, FieldProcessor fp) throws BusinessException {
 		RoleImpl role = form.getRole();
-		RoleImpl currentRole = roleRepository.findOne(role.getId());
+		RoleImpl currentRole = roleRepository.findById(role.getId()).orElse(null);
 		if (null == currentRole) {
 			throw new BusinessException("no such role", MessageConstants.ROLE_NOT_EXISTS);
 		}
@@ -827,7 +826,7 @@ public class ManagerService extends CoreService implements Service {
 				Page<ApplicationImpl> applications = applicationRepository.search(fp.getPageable());
 				data.setPage(applications);
 			} else {
-				ApplicationImpl application = applicationRepository.findOne(appId);
+				ApplicationImpl application = applicationRepository.findById(appId).orElse(null);
 				if (null == application) {
 					throw new BusinessException("no such application: " + appId,
 							MessageConstants.APPLICATION_NOT_EXISTS);
@@ -844,7 +843,7 @@ public class ManagerService extends CoreService implements Service {
 			} else {
 				Page<ApplicationImpl> allApplications = applicationRepository.search(pageable);
 				List<SiteApplication> applications = new ArrayList<>();
-				Site site = siteRepository.findOne(siteId);
+				Site site = siteRepository.findById(siteId).orElse(null);
 				for (Application application : allApplications) {
 					SiteApplication siteApplication = ((SiteImpl) site).getSiteApplication(application.getName());
 					if (siteApplication == null) {
@@ -856,7 +855,7 @@ public class ManagerService extends CoreService implements Service {
 					}
 					applications.add(siteApplication);
 				}
-				Pageable currentPage = new PageRequest(allApplications.getNumber(), allApplications.getSize(),
+				Pageable currentPage = PageRequest.of(allApplications.getNumber(), allApplications.getSize(),
 						allApplications.getSort());
 				Page<SiteApplication> page = new PageImpl<SiteApplication>(applications, currentPage,
 						allApplications.getTotalElements());
@@ -877,7 +876,7 @@ public class ManagerService extends CoreService implements Service {
 	}
 
 	public void reloadRepository(Request request, Integer repositoryId, FieldProcessor fp) throws BusinessException {
-		reloadRepository(request, fp, repoRepository.findOne(repositoryId));
+		reloadRepository(request, fp, repoRepository.findById(repositoryId).orElse(null));
 	}
 
 	protected void reloadRepository(Request request, FieldProcessor fp, RepositoryImpl repository)
@@ -895,7 +894,7 @@ public class ManagerService extends CoreService implements Service {
 			throws BusinessException {
 		try {
 			if (application.getId() != null) {
-				ApplicationImpl currentApplication = applicationRepository.findOne(application.getId());
+				ApplicationImpl currentApplication = applicationRepository.findById(application.getId()).orElse(null);
 				if (null == currentApplication) {
 					fp.addErrorMessage(request.getMessage(MessageConstants.APPLICATION_NOT_EXISTS));
 					return;
@@ -912,7 +911,7 @@ public class ManagerService extends CoreService implements Service {
 
 	public void updateRepository(Request request, RepositoryForm repositoryForm, FieldProcessor fp)
 			throws BusinessException {
-		RepositoryImpl currentRepository = repoRepository.findOne(repositoryForm.getRepository().getId());
+		RepositoryImpl currentRepository = repoRepository.findById(repositoryForm.getRepository().getId()).orElse(null);
 		try {
 			if (null == currentRepository) {
 				throw new BusinessException("no such repository");
@@ -965,7 +964,7 @@ public class ManagerService extends CoreService implements Service {
 		DataContainer data = new DataContainer(fp);
 		Map<String, Site> siteMap = environment.getAttribute(Scope.PLATFORM, Platform.Environment.SITES);
 		if (siteId != null) {
-			SiteImpl site = siteRepository.findOne(siteId);
+			SiteImpl site = siteRepository.findById(siteId).orElse(null);
 			if (null == site) {
 				throw new BusinessException("no such site: " + siteId, MessageConstants.SITE_NOT_EXISTS);
 			}
@@ -1058,7 +1057,7 @@ public class ManagerService extends CoreService implements Service {
 		try {
 			SiteImpl site = form.getSite();
 			boolean isActive = site.isActive();
-			SiteImpl currentSite = siteRepository.findOne(site.getId());
+			SiteImpl currentSite = siteRepository.findById(site.getId()).orElse(null);
 			if (null == currentSite) {
 				throw new BusinessException("no such site:" + site.getId());
 			}
@@ -1106,7 +1105,7 @@ public class ManagerService extends CoreService implements Service {
 			List<String> languages) throws BusinessException {
 		DataContainer data = new DataContainer(fp);
 		if (subjectId != null) {
-			SubjectImpl subject = subjectRepository.findOne(subjectId);
+			SubjectImpl subject = subjectRepository.findById(subjectId).orElse(null);
 			if (null == subject) {
 				fp.addErrorMessage(request.getMessage(MessageConstants.SUBJECT_NOT_EXISTS));
 				throw new BusinessException("no such subject: " + subjectId, MessageConstants.SUBJECT_NOT_EXISTS);
@@ -1172,7 +1171,7 @@ public class ManagerService extends CoreService implements Service {
 			searchQuery.equals("g.id", request.convert(groupId, Integer.class));
 			List<Order> orders = StreamSupport.stream(pageable.getSort().spliterator(), false)
 					.map(o -> new Order(o.getDirection(), "e." + o.getProperty())).collect(Collectors.toList());
-			pageable = new PageRequest(pageable.getPageNumber(), pageable.getPageSize(), new Sort(orders));
+			pageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(orders));
 		}
 
 		Page<SubjectImpl> subjects = subjectRepository.search(searchQuery, pageable);
@@ -1201,7 +1200,7 @@ public class ManagerService extends CoreService implements Service {
 				new String[] { email }, email);
 		emailFilter.setType(SelectionType.TEXT);
 
-		List<GroupImpl> groups = groupRepository.findAll(new Sort(Direction.ASC, "name"));
+		List<GroupImpl> groups = groupRepository.findAll(Sort.by(Direction.ASC, "name"));
 		Selector groupSelector = o -> {
 			if (null != groupId && groupId.toString().equals(o.getValue())) {
 				o.setSelected(true);
@@ -1224,7 +1223,7 @@ public class ManagerService extends CoreService implements Service {
 
 	private void addSelectionsForSubject(Request request, DataContainer data, SubjectImpl subject, String timezone,
 			List<String> languages) {
-		List<? extends Group> allGroups = groupRepository.findAll(new Sort(Direction.ASC, "name"));
+		List<? extends Group> allGroups = groupRepository.findAll(Sort.by(Direction.ASC, "name"));
 		Selection selection = selectionFactory.fromNamed("groups", MessageConstants.GROUPS, allGroups,
 				subject.getGroups());
 		data.getSelections().add(selection);
@@ -1325,7 +1324,7 @@ public class ManagerService extends CoreService implements Service {
 		SubjectImpl subject = subjectForm.getSubject();
 		try {
 			if (subject.getId() != null) {
-				SubjectImpl currentSubject = subjectRepository.findOne(subject.getId());
+				SubjectImpl currentSubject = subjectRepository.findById(subject.getId()).orElse(null);
 				if (null == currentSubject) {
 					fp.addErrorMessage(request.getMessage(MessageConstants.SUBJECT_NOT_EXISTS));
 				}
@@ -1359,7 +1358,7 @@ public class ManagerService extends CoreService implements Service {
 		try {
 			role.getPermissions().clear();
 			for (Integer id : permissionsIds) {
-				Permission permission = permissionRepository.findOne(id);
+				Permission permission = permissionRepository.findById(id).orElse(null);
 				role.getPermissions().add(permission);
 			}
 		} catch (Exception e) {
@@ -1381,9 +1380,9 @@ public class ManagerService extends CoreService implements Service {
 			boolean assign) throws BusinessException {
 
 		MigrationStatus migrationStatus = null;
-		SiteImpl site = siteRepository.findOne(siteId);
-		Application application = applicationRepository.findOne(appId);
-		SiteApplication siteApplication = siteApplicationRepository.findOne(new SiteApplicationPK(siteId, appId));
+		SiteImpl site = siteRepository.findById(siteId).orElse(null);
+		Application application = applicationRepository.findById(appId).orElse(null);
+		SiteApplication siteApplication = siteApplicationRepository.findById(new SiteApplicationPK(siteId, appId)).orElse(null);
 		boolean isAssigned = null != siteApplication;
 		if (isAssigned) {
 			boolean hasConnection = null != siteApplication.getDatabaseConnection();
@@ -1425,7 +1424,7 @@ public class ManagerService extends CoreService implements Service {
 				}
 			}
 		} else if (isAssigned) {
-			logger.debug("removing application '" + application.getName() + "' from site '" + site.getName() + "'");
+			LOGGER.debug("removing application '" + application.getName() + "' from site '" + site.getName() + "'");
 			if (!isLive) {
 				migrationStatus = unlinkApplicationFromSite(siteApplication);
 				DatabaseConnection connection = siteApplication.getDatabaseConnection();
@@ -1458,7 +1457,7 @@ public class ManagerService extends CoreService implements Service {
 	public void createPermission(Request request, PermissionImpl permission, Integer appId, FieldProcessor fp)
 			throws BusinessException {
 		if (null != appId) {
-			ApplicationImpl application = applicationRepository.findOne(appId);
+			ApplicationImpl application = applicationRepository.findById(appId).orElse(null);
 			permission.setApplication(application);
 			checkUniquePermissionName(request, permission, permission.getName(), fp);
 			permissionRepository.save(permission);
@@ -1469,7 +1468,7 @@ public class ManagerService extends CoreService implements Service {
 
 	public void updatePermission(Request request, Permission permission, FieldProcessor fp) throws BusinessException {
 		if (permission.getId() != null) {
-			PermissionImpl currentPermission = permissionRepository.findOne(permission.getId());
+			PermissionImpl currentPermission = permissionRepository.findById(permission.getId()).orElse(null);
 			if (null == currentPermission) {
 				throw new BusinessException("No such permission!", MessageConstants.PERMISSION_NOT_EXISTS);
 			}
@@ -1495,7 +1494,7 @@ public class ManagerService extends CoreService implements Service {
 			throws BusinessException {
 		DataContainer data = new DataContainer(fp);
 		if (permissionId != null) {
-			PermissionImpl permission = permissionRepository.findOne(permissionId);
+			PermissionImpl permission = permissionRepository.findById(permissionId).orElse(null);
 			if (null == permission) {
 				throw new BusinessException("no such permission " + permissionId,
 						MessageConstants.PERMISSION_NOT_EXISTS);
@@ -1514,7 +1513,7 @@ public class ManagerService extends CoreService implements Service {
 			String propertyName) throws BusinessException {
 		DataContainer data = new DataContainer(fp);
 		if (propertyName != null && propertyName.length() > 0) {
-			PropertyImpl property = propertyRepository.findOne(propertyName);
+			PropertyImpl property = propertyRepository.findById(propertyName).orElse(null);
 			if (null == property) {
 				throw new BusinessException("no such property " + propertyName, MessageConstants.PROPERTY_NOT_EXISTS);
 			}
@@ -1558,7 +1557,7 @@ public class ManagerService extends CoreService implements Service {
 		try {
 			PropertyImpl property = propertyForm.getProperty();
 			if (property.getName() != null) {
-				PropertyImpl currentProperty = propertyRepository.findOne(property.getName());
+				PropertyImpl currentProperty = propertyRepository.findById(property.getName()).orElse(null);
 				if (null == currentProperty) {
 					throw new BusinessException("no such property");
 				}
@@ -1577,7 +1576,7 @@ public class ManagerService extends CoreService implements Service {
 	}
 
 	public void deleteProperty(Request request, String id, FieldProcessor fp) throws BusinessException {
-		PropertyImpl prop = propertyRepository.findOne(id);
+		PropertyImpl prop = propertyRepository.findById(id).orElse(null);
 		try {
 			if (null != prop) {
 				deleteProperty(prop);
@@ -1601,9 +1600,9 @@ public class ManagerService extends CoreService implements Service {
 						initializerService.loadSite(request.getEnvironment(), site, fp);
 						Site siteByName = RequestUtil.getSiteByName(request.getEnvironment(), siteName);
 						if (null == siteByName || !SiteState.STARTED.equals(siteByName.getState())) {
-							logger.info("Site not started: {}", siteName);
+							LOGGER.info("Site not started: {}", siteName);
 						} else {
-							logger.info("Site reloaded: {}", siteName);
+							LOGGER.info("Site reloaded: {}", siteName);
 							return true;
 						}
 					} catch (InvalidConfigurationException e) {
@@ -1746,7 +1745,7 @@ public class ManagerService extends CoreService implements Service {
 			}
 		} catch (URISyntaxException e) {
 			// may occur very unlikely while using infinite improbability drive
-			logger.error("", e);
+			LOGGER.error("", e);
 		}
 		return data;
 	}
@@ -1784,7 +1783,7 @@ public class ManagerService extends CoreService implements Service {
 	public List<JarInfo> getJars(Environment environment, Integer siteId) {
 		List<JarInfo> jarInfos;
 		if (null != siteId) {
-			SiteImpl site = siteRepository.findOne(siteId);
+			SiteImpl site = siteRepository.findById(siteId).orElse(null);
 			jarInfos = environment.getAttribute(Scope.PLATFORM, site.getName() + "." + EnvironmentKeys.JAR_INFO_MAP);
 		} else {
 			jarInfos = environment.getAttribute(Scope.PLATFORM,
@@ -1797,7 +1796,7 @@ public class ManagerService extends CoreService implements Service {
 	}
 
 	public void updateDatabaseConnection(Request request, FieldProcessor fp, DatabaseConnection databaseConnection) {
-		DatabaseConnection current = databaseConnectionRepository.findOne(databaseConnection.getId());
+		DatabaseConnection current = databaseConnectionRepository.findById(databaseConnection.getId()).orElse(null);
 		byte[] currentPassword = current.getPassword();
 		request.setPropertyValues(databaseConnection, current, fp.getMetaData());
 		if (StringUtils.isBlank(current.getPasswordPlain())) {
@@ -1841,7 +1840,7 @@ public class ManagerService extends CoreService implements Service {
 	}
 
 	public void deleteDatabaseConnection(Request request, FieldProcessor fp, Integer conId) {
-		DatabaseConnection current = databaseConnectionRepository.findOne(conId);
+		DatabaseConnection current = databaseConnectionRepository.findById(conId).orElse(null);
 		if (null != current) {
 			// TODO check if in use
 			databaseConnectionRepository.delete(current);
@@ -1865,7 +1864,7 @@ public class ManagerService extends CoreService implements Service {
 	}
 
 	public SiteApplication getSiteApplication(Integer siteId, Integer appId) {
-		SiteApplication siteApplication = siteApplicationRepository.findOne(new SiteApplicationPK(siteId, appId));
+		SiteApplication siteApplication = siteApplicationRepository.findById(new SiteApplicationPK(siteId, appId)).orElse(null);
 		siteApplication.getGrantedSites().size();
 		return siteApplication;
 	}
@@ -1877,7 +1876,7 @@ public class ManagerService extends CoreService implements Service {
 		SiteApplication siteApplication = getSiteApplication(siteId, appId);
 		Site grantedSite = siteApplication.getSite();
 		Application application = siteApplication.getApplication();
-		List<SiteImpl> allSites = siteRepository.findAll(new Sort("name"));
+		List<SiteImpl> allSites = siteRepository.findAll(Sort.by("name"));
 		allSites.remove(grantedSite);
 		for (SiteImpl site : new ArrayList<>(allSites)) {
 			SiteApplication granted = siteApplicationRepository
@@ -1900,7 +1899,7 @@ public class ManagerService extends CoreService implements Service {
 	public void grantSites(Integer siteId, Integer appId, Set<Integer> grantedSiteIds) {
 		SiteApplication siteApplication = getSiteApplication(siteId, appId);
 		siteApplication.getGrantedSites().clear();
-		List<SiteImpl> sites = siteRepository.findAll(grantedSiteIds);
+		List<SiteImpl> sites = siteRepository.findAllById(grantedSiteIds);
 		siteApplication.getGrantedSites().addAll(sites);
 	}
 
@@ -1908,7 +1907,7 @@ public class ManagerService extends CoreService implements Service {
 			throws BusinessException {
 		File file = archive.getFile();
 		String originalFilename = archive.getOriginalFilename();
-		RepositoryImpl repo = repoRepository.findOne(repositoryId);
+		RepositoryImpl repo = repoRepository.findById(repositoryId).orElse(null);
 		RepositoryMode repositoryMode = repo.getRepositoryMode();
 		PackageArchive packageArchive = RepositoryUtils.getPackage(repo, file, originalFilename);
 		if (null != packageArchive && RepositoryType.LOCAL.equals(repo.getRepositoryType())) {
@@ -1921,7 +1920,7 @@ public class ManagerService extends CoreService implements Service {
 					String message = request.getMessage(MessageConstants.REPOSITORY_ARCHIVE_REPLACED, originalFilename);
 					fp.addNoticeMessage(message);
 				}
-				logger.info("copied archive from {} to {}", file, targetArchive);
+				LOGGER.info("copied archive from {} to {}", file, targetArchive);
 				RepositoryCacheFactory.instance().getCache(repo).add(packageArchive);
 				return packageArchive.getPackageInfo().getName();
 			} catch (IOException e) {
@@ -1938,11 +1937,11 @@ public class ManagerService extends CoreService implements Service {
 	}
 
 	public RepositoryImpl getRepository(Integer repositoryId) {
-		return repoRepository.findOne(repositoryId);
+		return repoRepository.findById(repositoryId).orElse(null);
 	}
 
 	public String getNameForSite(Integer siteId) {
-		Site site = siteRepository.findOne(siteId);
+		Site site = siteRepository.findById(siteId).orElse(null);
 		return site == null ? null : site.getName();
 	}
 

@@ -40,7 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * Allows displaying and uploading a {@link Resource} for an {@link Application}.
- * 
+ *
  * @author Matthias Müller
  */
 
@@ -65,7 +65,7 @@ public class ResourceUpload extends ServiceAware implements ActionProvider<Uploa
 			Integer applicationId = options.getInteger(APPLICATION, ID);
 			getService().createResource(request, site, applicationId, form, fp);
 		} catch (BusinessException ex) {
-			log.error("error while processing resource", ex);
+			LOGGER.error("error while processing resource", ex);
 		}
 	}
 

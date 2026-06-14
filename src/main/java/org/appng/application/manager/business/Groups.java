@@ -36,7 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * Provides CRUD-operations for a {@link GroupImpl}.
- * 
+ *
  * @author Matthias Müller
  */
 
@@ -71,7 +71,7 @@ public class Groups extends ServiceAware implements ActionProvider<GroupForm>, D
 		} catch (BusinessException ex) {
 			if (null != errorMessage) {
 				String message = request.getMessage(errorMessage, groupId);
-				log.error(message, ex);
+				LOGGER.error(message, ex);
 				fp.addErrorMessage(message);
 			}
 		}
@@ -90,7 +90,7 @@ public class Groups extends ServiceAware implements ActionProvider<GroupForm>, D
 				data = service.searchGroups(fp, site, null, groupId, groupName);
 			} catch (BusinessException ex) {
 				String message = request.getMessage(ex.getMessageKey(), ex.getMessageArgs());
-				log.error(message, ex);
+				LOGGER.error(message, ex);
 				fp.addErrorMessage(message);
 			}
 		}
